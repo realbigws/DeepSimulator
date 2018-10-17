@@ -11,6 +11,7 @@ fi
 #------- default parameters -----------#
 #-> multiprocess
 THREAD_NUM=24       #-> this is the thread (or, CPU) number
+SIMULATOR_THREAD=4  #-> this is the thread number for simulator
 #-> genome sampling
 SAMPLE_MODE=2       #-> choose from the following distribution: 1: beta_distribution, 2: alpha_distribution, 3: mixed_gamma_dis. default: [2]
 GENOME_CIRCULAR=0   #-> 0 for NOT circular and 1 for circular. default: [0]
@@ -70,7 +71,7 @@ python2 pore_model/src/main.py \
 	-i $FILENAME/sampled_read.fasta \
 	-p $FILENAME/signal/$PREFIX \
 	-l $FILENAME/align/$PREALI \
-	-t 4  \
+	-t $SIMULATOR_THREAD  \
 	-a $REPEAT_MODE -s $NOISE_STD
 
 # change the signal file to fasta5 file
