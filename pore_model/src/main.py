@@ -151,16 +151,14 @@ if __name__ == '__main__':
 	os.environ['CUDA_VISIBLE_DEVICES'] ='-1'
 	parser = argparse.ArgumentParser(description='convert the \
 		input sequence to nanopore signal')
-	parser.add_argument('-i', action='store', dest='input', 
+	parser.add_argument('-i', action='store', dest='input', required=True, 
 		help='the input file')
-	parser.add_argument('-p', action='store', dest='output',
+	parser.add_argument('-p', action='store', dest='output', required=True,
 		help='prefix the output file')
-	parser.add_argument('-l', action='store', dest='alignment',
+	parser.add_argument('-l', action='store', dest='alignment', required=True,
 		help='prefix the alignment file')
-	parser.add_argument('-n', action='store', dest='seq_num',
-		type=int, help='the number of input sequence in the fasta file')
 	parser.add_argument('-t', action='store', dest='threads',
-		type=int, help='the number of threads used')
+		type=int, help='the number of threads used', default=1)
 	parser.add_argument('-a', action='store', dest='alpha',
 		type=float, help='change the distribution of the signal repeat time, \
 		value between 0 and 1, 0.1 (default) would give the distribution best \
@@ -171,10 +169,10 @@ if __name__ == '__main__':
 		type=float, help='set the std of the signal, default as 1',
 		default=1)
 	parser.add_argument('--perfect', action='store', dest='perfect',
-		default=False, type=bool, help='Do you want a perfect signal and sequence')
+		type=bool, help='Do you want a perfect signal and sequence',
+		default=False)
 
 	arg = parser.parse_args()
-	seq_num = arg.seq_num
 	seq_list = get_seq_list(arg.input)
 	id_list = get_id_list(arg.input)
 	# seq_list = get_seq_list('../sequence/test.fasta')
