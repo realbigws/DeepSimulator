@@ -70,7 +70,7 @@ python2 pore_model/src/main.py \
 	-i $FILENAME/sampled_read.fasta \
 	-p $FILENAME/signal/$PREFIX \
 	-l $FILENAME/align/$PREALI \
-	-t $THREAD_NUM  \
+	-t 4  \
 	-a $REPEAT_MODE -s $NOISE_STD
 
 # change the signal file to fasta5 file
