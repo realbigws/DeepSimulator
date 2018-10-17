@@ -9,9 +9,9 @@ from os.path import basename
 from multiprocessing import Pool
 
 parser = argparse.ArgumentParser(description='Generate a new fasta5 file')
-parser.add_argument('-i', action='store', dest='fast5_fn', 
+parser.add_argument('-i', action='store', dest='fast5_fn', required=True, 
     help='the template fasta5 file')
-parser.add_argument('-s', action='store', dest='signal_for_mod',
+parser.add_argument('-s', action='store', dest='signal_for_mod', required=True,
     help='the input signal')
 parser.add_argument('-d', action='store', dest='dest', default='./',
     help='the store directory')
