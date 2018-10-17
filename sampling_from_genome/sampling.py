@@ -128,6 +128,8 @@ if __name__ == '__main__':
 
 	# deal with the not standard genome, containing 'N', or in lower case.
 	genome = genome.upper()
+	# replace all non ATCG nucleotides into 'N'
+	genome = re.sub('[^ATCG]', 'N', genome)
 
 	if arg.replace:
 		genome = replace_n(genome)
