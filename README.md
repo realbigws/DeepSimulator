@@ -27,7 +27,7 @@ Anaconda2 or Minoconda2 (https://conda.io/miniconda.html)
 # Install
 ## Download the DeepSimulator package
 ```
-git clone https://github.com/lykaust15/DeepSimulator.git
+git clone https://github.com/realbigws/DeepSimulator.git
 cd ./DeepSimulator/
 ```
 
