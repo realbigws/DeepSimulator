@@ -17,7 +17,7 @@ function usage()
 	echo "    A Deep Learning based Nanopore simulator which can simulate the process of Nanopore sequencing. "
 	echo ""
 	echo "USAGE:  ./deep_simulator.sh <-i input_genome> [-n simu_read_num] [-o output_root] [-c CPU_num] "
-	echo "                    [-C cirular_genome] [-m sample_mode] [-M repeat_mode] [-s noise_std] [-H home] "
+	echo "                 [-C cirular_genome] [-m sample_mode] [-M repeat_mode] [-s noise_std] [-P perfect] [-H home] "
 	echo "Options:"
 	echo ""
 	echo "***** required arguments *****"
@@ -41,6 +41,9 @@ function usage()
 	echo "                    '1.0' would give the almost perfect basecalling result using Albacore. "
 	echo ""
 	echo "-s noise_std      : set the standard deviation (std) of the random noise of the signal. [default = 1.0] "
+	echo ""
+	echo "-P perfect        : 0 for normal mode (with length repeat and random noise). [default = 0]"
+	echo "                    1 for perfect context-dependent pore model (without length repeat and random noise). "
 	echo ""
 	echo "-H home           : home directory of DeepSimulator. [default = 'current directory'] "
 	echo ""
@@ -139,13 +142,15 @@ REPEAT_MODE=0.1     #-> value between 0 and 1, 0.1 (default).
 #        0.0 would give distribution whose basecalling result is slightly worse than the real case
 #        1.0 would give the almost perfect basecalling result using Albacore
 NOISE_STD=1.0       #-> set the std of random noise of the signal, default as 1.0
-
+#-> perfect mode
+PERFECT_MODE=0      #-> 0 for normal mode (with length repeat and random noise). [default = 0]
+                    #-> 1 for perfect context-dependent pore model (without length repeat and random noise).
 #------- home directory -----------------#
 home=$curdir
 
 
 #------- parse arguments ---------------#
-while getopts ":i:n:o:c:C:m:M:s:H:" opt;
+while getopts ":i:n:o:c:C:m:M:s:P:H:" opt;
 do
 	case $opt in
 	#-> required arguments
@@ -174,6 +179,9 @@ do
 		;;
 	s)
 		NOISE_STD=$OPTARG
+		;;
+	P)
+		PERFECT_MODE=$OPTARG
 		;;
 	#-> home directory
 	H)
@@ -303,12 +311,22 @@ rm -rf $FILENAME/align/*
 mkdir -p $FILENAME/align
 source activate tensorflow_cdpm
 export DeepSimulatorHome=$home
-python2 $home/pore_model/src/main.py \
-	-i $FILENAME/sampled_read.fasta \
-	-p $FILENAME/signal/$PREFIX \
-	-l $FILENAME/align/$PREALI \
-	-t $THREAD_NUM  \
-	-a $REPEAT_MODE -s $NOISE_STD
+if [ $PERFECT_MODE -eq 0 ]
+then
+	python2 $home/pore_model/src/main.py \
+		-i $FILENAME/sampled_read.fasta \
+		-p $FILENAME/signal/$PREFIX \
+		-l $FILENAME/align/$PREALI \
+		-t $THREAD_NUM  \
+		-a $REPEAT_MODE -s $NOISE_STD
+else
+	python2 $home/pore_model/src/main.py \
+		-i $FILENAME/sampled_read.fasta \
+		-p $FILENAME/signal/$PREFIX \
+		-l $FILENAME/align/$PREALI \
+		-t $THREAD_NUM  \
+		--perfect True -s -1
+fi
 
 # change the signal file to fasta5 file
 echo "Finished generate the simulated signals!"

@@ -115,7 +115,6 @@ def repeat_n_time(a, result):
 	return out,ali
 
 def repeat_k_time(k, result):
-	rep_times = rep_rvs(len(result), a)
 	out = list()
 	ali = list()
 	pos = 0
@@ -144,7 +143,8 @@ def raw_to_true_signal(result_pred, sequence, repeat_alpha, noise_std, perfect):
 		final_result, final_ali = repeat_k_time(6, final_result)
 	else:
 		final_result, final_ali = repeat_n_time(repeat_alpha, final_result)
-	final_result = final_result + add_noise(noise_std, len(final_result))
+	if noise_std>0:
+		final_result = final_result + add_noise(noise_std, len(final_result))
 	return final_result, final_ali
 
 
