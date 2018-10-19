@@ -22,7 +22,7 @@ Reference:
 
 # Usage
 ## Prerequisites
-1. Anaconda 2 or Minoconda 2 (https://conda.io/miniconda.html)
+Anaconda2 or Minoconda2 (https://conda.io/miniconda.html)
 
 # Install
 ## Download the DeepSimulator package
