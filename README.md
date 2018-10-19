@@ -31,15 +31,21 @@ git clone https://github.com/realbigws/DeepSimulator.git
 cd ./DeepSimulator/
 ```
 
-## Build a virtual environment for the context-independent pore model
+## Install all required modules
 ```
 ./install
 ```
 
-## Run a test
+## Run a test to generate simulated Nanopore reads
 ```
 ./deep_simulator.sh -i example/human_single.fasta 
 ```
+
+## Context-dependent pore model
+```
+./context_poremodel.sh example/human_single.fasta
+```
+
 <!-- Remember to save the fast5 folder since it is consider to be a temp folder and overwritten every time you run the main.sh file -->
 
 ## Control the behavior of DeepSimulator
