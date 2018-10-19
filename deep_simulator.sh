@@ -42,7 +42,7 @@ function usage()
 	echo ""
 	echo "-s noise_std      : set the standard deviation (std) of the random noise of the signal. [default = 1.0] "
 	echo ""
-	echo "-H home           : home directory of DeepSimulator. [default = `pwd`] "
+	echo "-H home           : home directory of DeepSimulator. [default = 'current directory'] "
 	echo ""
 	exit 1
 }
