@@ -2,7 +2,7 @@
 
 if [ $# -lt 1 ]
 then
-	echo "Usage: ./deep_simulator.sh <input_genomic_sequence> "
+	echo "Usage: ./context_poremodel.sh <input_genomic_sequence> "
 	exit
 fi
 
