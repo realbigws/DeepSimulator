@@ -95,7 +95,8 @@ def rep_rvs(size,a):
         -7.6451557771999035+(2*a), 50.873948369526737, 
         size=(size-int(size*(0.075-0.015*a)))).astype(int)
     samples = np.concatenate((samples, array_1), 0)
-    samples[samples<1] = 2
+    samples[samples<2] = 2
+    samples[samples>40] = 40
     np.random.shuffle(samples)
     return samples
 
@@ -105,9 +106,10 @@ def repeat_n_time(a, result):
 	ali = list()
 	pos = 0
 	for i in range(len(result)):
-		cur = [result[i]] * rep_times[i]
+		k = rep_times[i]
+		cur = [result[i]] * k
 		out.extend(cur)
-		for j in range(rep_times[i]):
+		for j in range(k):
 			ali.append((pos,i))
 			pos = pos + 1
 	return out,ali
