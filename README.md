@@ -41,6 +41,11 @@ cd ./DeepSimulator/
 ./context_poremodel.sh example/human_single.fasta
 ```
 
+## Context-independent kmer pore model (using official 6mer)
+```
+kmer_model/kmer_poremodel example/human_single.fasta 0 > kmer_signal
+```
+
 ## Run a test to generate simulated Nanopore reads
 ```
 ./deep_simulator.sh -i example/human_single.fasta 
