@@ -36,6 +36,12 @@ cd ./DeepSimulator/
 ```
 
 # Test
+
+## Pre-process nucleotide sequence
+```
+python util/genome_preprocess.py -i example/human_single.fasta -o processed_sequence -r 1
+```
+
 ## Context-dependent pore model
 ```
 ./context_poremodel.sh example/human_single.fasta
