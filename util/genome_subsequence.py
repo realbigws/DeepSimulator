@@ -15,10 +15,10 @@ def load_genome(input_file):
 	sequence = ''.join(sequence)
 	return sequence
 
-def save_genome(genome, output_file):
+def save_genome_range(genome, range_reso, output_file):
 	with open(output_file, 'w') as f:
-		f.write('>preprocess\n')
-		f.write(genome+'\n')
+                f.write('>range | %d %d-%d of %d \n' % (range_reso[1], range_reso[0], range_reso[0]+range_reso[1], range_reso[2]) )
+                f.write(genome+'\n')
 
 def replace_n(genome):
 	n_index = [m.start() for m in re.finditer('N', genome)]
@@ -31,14 +31,20 @@ def replace_n(genome):
 
 #============== main =====================#
 if __name__ == '__main__':
-	parser = argparse.ArgumentParser(description='pre-process input genome')
+	parser = argparse.ArgumentParser(description='read position from input genome')
 
 	#-> required arguments
 	parser.add_argument('-i', action='store', dest='input', required=True, 
 		help='the input genome file in fasta format')
+	parser.add_argument('-p', action='store', dest='position', required=True,
+		type=int, help='start position (1-base)')
+	parser.add_argument('-l', action='store', dest='length', required=True,
+		type=int, help='length of the sequence')
 	parser.add_argument('-o', action='store', dest='output', required=True,
 		help='prefix the output file')
 	#-> optional arguments
+	parser.add_argument('-c', action='store', dest='circular',
+		default=False, type=bool, help='set if the genome is circular (default is linear)')
 	parser.add_argument('-r', action='store', dest='replace',
 		default=False, type=bool, help='set if we replace the \'N\'s (default: delete the \'N\'s)')
 
@@ -55,5 +61,16 @@ if __name__ == '__main__':
 	else:
 		genome = genome.replace('N','')
 
-	# output genome
-	save_genome(genome, arg.output)
+	# get sequence
+	start_point = arg.position-1
+	read_length = arg.length
+	if len(genome)>=(start_point+read_length) or arg.circular==False :
+		sub_genome = genome[start_point: start_point+read_length]
+	else:
+		sub_genome = genome[start_point:]+genome[:start_point+read_length-len(genome)]
+
+	# output sequence
+	range_reso = []
+	range_reso.extend( (arg.position,arg.length,len(genome)) )
+	save_genome_range(sub_genome, range_reso, arg.output)
+
