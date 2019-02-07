@@ -29,8 +29,13 @@ if __name__ == '__main__':
 		result is slightly worse than the real case, 1 would give the almost \
 		perfect basecalling result using Albacore', default=0.1)
 	parser.add_argument('-s', action='store', dest='std',
-		type=float, help='set the std of the signal, default as 1',
-		default=1)
+		type=float, help='set the std of the signal. \
+		The higher the value, the blurred the signal. (default is 1.5)',
+		default=1.5)
+	parser.add_argument('-f', action='store', dest='freq',
+		type=float, help='change the cut frequency in the low pass filter. \
+		The higher the value, the smoother the signal. (default is 850)',
+		default=850)
 	parser.add_argument('--perfect', action='store', dest='perfect',
 		type=bool, help='Do you want a perfect signal and sequence',
 		default=False)
@@ -56,7 +61,7 @@ if __name__ == '__main__':
 	#---------- output results -----------#
 	for i in range(len(result_list)):
 		final_signal, final_ali = raw_to_true_signal(result_list[i], 
-			seq_list[i], arg.alpha, arg.std, arg.perfect, arg.perflen)
+			seq_list[i], arg.alpha, arg.freq, arg.std, arg.perfect, arg.perflen)
 		write_output(final_signal, arg.output+'_{}.txt'.format(id_list[i]))
 		write_alignment(final_ali, arg.alignment+'_{}.ali'.format(id_list[i]))
 

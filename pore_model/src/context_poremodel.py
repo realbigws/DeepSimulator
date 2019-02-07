@@ -36,6 +36,6 @@ if __name__ == '__main__':
 
 	for i in range(len(result_list)):
 		final_signal, final_ali = raw_to_true_signal(result_list[i], 
-			seq_list[i], 0, 0, 1, 1)
+			seq_list[i], 0, 850, 0, 1, 1)
 		write_output(final_signal, arg.output+'_{}.txt'.format(id_list[i]))
 

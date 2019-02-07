@@ -39,7 +39,7 @@ cd ./DeepSimulator/
 
 ## Pre-process nucleotide sequence
 ```
-python util/genome_preprocess.py -i example/Ecoli_K12_DH10B.fasta -o processed_sequence -r
+python util/genome_preprocess.py -i example/Ecoli_K12_DH10B.fasta -o processed_sequence -r 1
 ```
 
 ## Context-dependent pore model

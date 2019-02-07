@@ -3,7 +3,6 @@
 import argparse
 import numpy as np
 import scipy.stats as st
-import re
 import random
 # s18
 # beta distribution with parameters
@@ -94,14 +93,8 @@ def save_file(read_list, output_file):
 			f.write('>{}\n'.format(i))
 			f.write(read_list[i]+'\n')
 
-def replace_n(genome):
-	n_index = [m.start() for m in re.finditer('N', genome)]
-	genome_list = np.array([x for x in genome])
-	random_base = np.random.choice(['A','T','C','G'],len(n_index))
-	genome_list[n_index] = random_base
-	genome = ''.join(genome_list)
-	return genome
-	
+
+# --------------- main ------------------#
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='sampling read from the \
 		input genome')
@@ -120,24 +113,8 @@ if __name__ == '__main__':
 	parser.add_argument('-c', action='store', dest='circular',
 		default=False, type=bool, help='if the genome is circular')
 
-	parser.add_argument('-r', action='store', dest='replace',
-		default=False, type=bool, help='if we replace the ns or delete the ns')
-
 	arg = parser.parse_args()
 	genome = load_genome(arg.input)
-
-	# deal with the not standard genome, containing 'N', or in lower case.
-	genome = genome.upper()
-	# replace all non ATCG nucleotides into 'N'
-	genome = re.sub('[^ATCG]', 'N', genome)
-
-	if arg.replace:
-		genome = replace_n(genome)
-	else:
-		genome = genome.replace('N','')
-
-	with open(arg.input+'.preprocessed', 'w') as f:
-		f.write(genome)
 
 	if arg.dis == 3:
 		read_length = draw_mix_gamma_dis(arg.seq_num)

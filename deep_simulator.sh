@@ -16,8 +16,8 @@ function usage()
 	echo "DeepSimulator v0.11 [Oct-30-2018] "
 	echo "    A Deep Learning based Nanopore simulator which can simulate the process of Nanopore sequencing. "
 	echo ""
-	echo "USAGE:  ./deep_simulator.sh <-i input_genome> [-n simu_read_num] [-o output_root] [-c CPU_num] "
-	echo "                 [-C cirular_genome] [-m sample_mode] [-M repeat_mode] [-s noise_std] [-P perfect] [-H home] "
+	echo "USAGE:  ./deep_simulator.sh <-i input_genome> [-n simu_read_num] [-o output_root] [-c CPU_num] [-m sample_mode]"
+	echo "                            [-C cirular_genome] [-f filter_freq] [-s noise_std] [-P perfect] [-H home] "
 	echo "Options:"
 	echo ""
 	echo "***** required arguments *****"
@@ -30,21 +30,17 @@ function usage()
 	echo ""
 	echo "-c CPU_num        : Number of processors. [default = 8]"
 	echo ""
-	echo "-C cirular_genome : 0 for linear genome and 1 for circular genome. [default = 0] "
-	echo ""
-	echo "-m sample_mode    : choose from the following distribution. [default = 2] "
+	echo "-m sample_mode    : choose from the following distribution for the read length. [default = 2] "
 	echo "                    1: beta_distribution, 2: alpha_distribution, 3: mixed_gamma_dis. "
 	echo ""
-	echo "-M repeat_mode    : a real value between 0 to 1 to determine the length repeat. [default = 0.1] "
-	echo "                    '0.1' would give the distribution best simulate the real case, "
-	echo "                    '0.0' would give distribution whose basecalling result is slightly worse than the real case, "
-	echo "                    '1.0' would give the almost perfect basecalling result using Albacore. "
+	echo "-C cirular_genome : 0 for linear genome and 1 for circular genome. [default = 0] "
 	echo ""
-	echo "-s noise_std      : set the standard deviation (std) of the random noise of the signal. [default = 1.0] "
+	echo "-f filter_freq    : set the frequency for the low-pass filter. [default = 850] "
+	echo ""
+	echo "-s noise_std      : set the standard deviation (std) of the random noise of the signal. [default = 1.5] "
 	echo "                    '1.0' would give the base-calling accuracy around 92\%, "
-	echo "                    '1.5' would give the base-calling accuracy around 89\%, "
-	echo "                    '2.0' would give the base-calling accuracy around 84\%, "
-	echo "                    '2.5' would give the base-calling accuracy around 76\%. "
+	echo "                    '1.5' would give the base-calling accuracy around 90\%, "
+	echo "                    '2.0' would give the base-calling accuracy around 85\%, "
 	echo ""
 	echo "-P perfect        : 0 for normal mode (with length repeat and random noise). [default = 0]"
 	echo "                    1 for perfect context-dependent pore model (without length repeat and random noise). "
@@ -52,62 +48,6 @@ function usage()
 	echo "-H home           : home directory of DeepSimulator. [default = 'current directory'] "
 	echo ""
 	exit 1
-}
-
-
-#----- check file existence ------# -> this is a function
-function file_exist()
-{
-	#-- input --#
-	local file=${1}    #-> 1st input is the file content
-	local name=${2}    #-> 2nd input is the file name
-	#-- check --#
-	if [ -z "$file" ]
-	then
-		echo "$name is null !!" >&2
-		return 1
-	fi
-	if [ ! -s "$curdir/$file" ]
-	then
-		if [ ! -s "$file" ]
-		then
-			echo "$name $file not found !!" >&2
-			return 1
-		fi
-	else
-		file=$curdir/$file
-	fi
-	#-- return --#
-	FUNC_RET=$file
-	return 0
-}
-
-#----- check root existence ------# -> this is a function
-function root_exist()
-{
-	FUNC_RET=""
-	#-- input --#
-	local root=${1}    #-> 1st input is the root content
-	local name=${2}    #-> 2nd input is the root name
-	#-- check --#
-	if [ -z "$root" ]
-	then
-		echo "$name is null !!" >&2
-		return 1
-	fi
-	if [ ! -d "$curdir/$root" ]
-	then
-		if [ ! -d "$root" ]
-		then
-			echo "$name $root not found !!" >&2
-			return 1
-		fi
-	else
-		root=$curdir/$root
-	fi
-	#-- return --#
-	FUNC_RET=$root
-	return 0
 }
 
 
@@ -141,11 +81,8 @@ THREAD_NUM=8        #-> this is the thread (or, CPU) number
 SAMPLE_MODE=2       #-> choose from the following distribution: 1: beta_distribution, 2: alpha_distribution, 3: mixed_gamma_dis. default: [2]
 GENOME_CIRCULAR=0   #-> 0 for NOT circular and 1 for circular. default: [0]
 #-> read geneartion
-REPEAT_MODE=0.1     #-> value between 0 and 1, 0.1 (default).
-#[note]: 0.1 would give the distribution best simulate the real case
-#        0.0 would give distribution whose basecalling result is slightly worse than the real case
-#        1.0 would give the almost perfect basecalling result using Albacore
-NOISE_STD=1.0       #-> set the std of random noise of the signal, default as 1.0
+FILTER_FREQ=850     #-> set the frequency for the low-pass filter. [default = 850] " 
+NOISE_STD=1.5       #-> set the std of random noise of the signal, default as 1.5
 #-> perfect mode
 PERFECT_MODE=0      #-> 0 for normal mode (with length repeat and random noise). [default = 0]
                     #-> 1 for perfect context-dependent pore model (without length repeat and random noise).
@@ -154,7 +91,7 @@ home=$curdir
 
 
 #------- parse arguments ---------------#
-while getopts ":i:n:o:c:C:m:M:s:P:H:" opt;
+while getopts ":i:n:o:c:C:m:f:s:P:H:" opt;
 do
 	case $opt in
 	#-> required arguments
@@ -178,8 +115,8 @@ do
 	m)
 		SAMPLE_MODE=$OPTARG
 		;;
-	M)
-		REPEAT_MODE=$OPTARG
+	f)
+		FILTER_FREQ=$OPTARG
 		;;
 	s)
 		NOISE_STD=$OPTARG
@@ -210,24 +147,12 @@ done
 #---------------------------------------------------------#
 
 # ------ check home directory ---------- #
-if [ ! -d "$home" ]; 
+if [ ! -d "$home" ]
 then
 	echo "home directory $home not exist " >&2
 	exit 1
 fi
-#-> change to absolute
-if [ ! -d "$curdir/$home" ]
-then
-	if [ ! -d "$home" ]
-	then
-		echo "home $home not found !!" >&2
-		exit 1
-	fi
-else
-	home=$curdir/$home
-fi
-#echo "home=$home"
-
+home=`readlink -f $home`
 
 #----------- check input genome  -----------#
 if [ -z "$FULLFILE" ]
@@ -235,47 +160,18 @@ then
 	echo "input input_genome is null !!" >&2
 	exit 1
 fi
-file_exist $FULLFILE FULLFILE
-retval=$?
-if [ "$retval" != "0"  ]
-then
-	exit 1
-else
-	FULLFILE=$FUNC_RET
-fi
+FULLFILE=`readlink -f $FULLFILE`
 #-> get query_name
 fulnam=`basename $FULLFILE`
 relnam=${fulnam%.*}
 
-
 # ------ check output directory -------- #
 if [ "$out_root" == "" ]
 then
-	out_root=$curdir/${relnam}_DeepSimu
-fi
-dir_out_root=`dirname $out_root`
-nam_out_root=`basename $out_root`
-if [ "$dir_out_root" == "." ]
-then
-	if [ "$nam_out_root" == "." ]
-	then
-		out_root=$curdir
-	else
-		out_root=$curdir/$nam_out_root
-	fi
+	out_root=${relnam}_DeepSimu
 fi
 mkdir -p $out_root
-#-> change to absolute
-if [ ! -d "$curdir/$out_root" ]
-then
-	if [ ! -d "$out_root" ]
-	then
-		echo "outroot $out_root not found !!" >&2
-		exit 1
-	fi
-else
-	out_root=$curdir/$out_root
-fi
+out_root=`readlink -f $out_root`
 
 
 #--------------------------------------------------------#
@@ -291,13 +187,18 @@ PREALI="align"
 # the input should be a fasta file
 # we should make a tmp directory named after the input file to
 # store the tmp files
-cp $FULLFILE $FILENAME/original_genome
+echo "Pre-process input genome..."
+python2 $home/util/genome_preprocess.py \
+	-i $FULLFILE \
+	-o $FILENAME/processed_genome \
+	-r 1
+echo "Pre-process input genome done!"
 
 # preprocessing, sampling the read
 # satisfy the converage and length distritubtion requirement
 echo "Executing the preprocessing step..."
-python2 $home/sampling_from_genome/sampling.py \
-	-i $FILENAME/original_genome \
+python2 $home/util/genome_sampling.py \
+	-i $FILENAME/processed_genome \
 	-p $FILENAME/sampled_read \
 	-n $SAMPLE_NUM \
 	-d $SAMPLE_MODE \
@@ -322,7 +223,7 @@ then
 		-p $FILENAME/signal/$PREFIX \
 		-l $FILENAME/align/$PREALI \
 		-t $THREAD_NUM  \
-		-a $REPEAT_MODE -s $NOISE_STD
+		-f $FILTER_FREQ -s $NOISE_STD
 else
 	python2 $home/pore_model/src/main.py \
 		-i $FILENAME/sampled_read.fasta \
@@ -337,8 +238,8 @@ echo "Finished generate the simulated signals!"
 echo "Converting the signal into FAST5 files..."
 rm -rf $FILENAME/fast5/*
 mkdir -p $FILENAME/fast5
-python2 $home/signal_to_fast5/fast5_modify_signal.py \
-	-i $home/signal_to_fast5/template.fast5 \
+python2 $home/util/fast5_modify_signal.py \
+	-i $home/util/template.fast5 \
 	-s $FILENAME/signal \
 	-d $FILENAME/fast5 
 
@@ -357,11 +258,12 @@ read_fast5_basecaller.py -i $FAST5_DIR -s $FASTQ_DIR \
 echo "Basecalling finished!"
 echo "Checking the read accuracy..."
 cat $FILENAME/fastq/workspace/pass/*.fastq > $FILENAME/test.fastq
-$home/mapping_check/minimap2 -Hk19 -t $THREAD_NUM -c $FULLFILE \
+$home/util/minimap2 -Hk19 -t $THREAD_NUM -c $FULLFILE \
 	$FILENAME/test.fastq > $FILENAME/mapping.paf
 accuracy=`awk 'BEGIN{a=0;b=0}{a+=$10/$11;b++}END{print a/b}' $FILENAME/mapping.paf`
-echo "Here is the mapping identity: $accuracy"
-echo $accuracy > $FILENAME/accuracy
+passnum=`grep "^@" $FILENAME/test.fastq | wc | awk '{print $1}'`
+echo "Here is the mapping identity: $accuracy of $passnum reads passed base-calling."
+echo "$accuracy $passnum" > $FILENAME/accuracy
 
 #---------- exit -----------#
 exit 0

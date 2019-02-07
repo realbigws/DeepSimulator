@@ -3,20 +3,15 @@ from con_reg_seq import *
 import numpy as np
 from multiprocessing import Pool
 import multiprocessing
-import os
 import sys
+import os
 import scipy.stats as st
+from random import *
+import scipy.signal
 
+
+#----- use GPU for TensorFlow -----#
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-
-# the threshold for creat bins
-threshold = 2.5
-num_bins = 25 + 2
-bin_size = threshold*2/(num_bins-2)
-
-data_type =['sequence', 'fix_value', 'can_value', 'label','adp']
-
-
 
 #--------------- step 1: generate chunk seq ---------------#
 def generate_chunk_seq(sequence, chunk_size=100, stride=100):
@@ -88,12 +83,12 @@ def rep_rvs(size,a):
         -7.6451557771999035+(2*a), 50.873948369526737,
         size=(size-int(size*(0.075-0.015*a)))).astype(int)
     samples = np.concatenate((samples, array_1), 0)
-    #addi = np.array(abs(np.random.normal(2,1,size))).astype(int)
+    addi = np.array(abs(np.random.normal(2,1,size))).astype(int)
     samples[samples<2] = 2
     samples[samples>40] = 40
-    #samples[samples<8] += addi[samples<8]
+    samples[samples<8] += addi[samples<8]
     np.random.shuffle(samples)
-    #samples[samples<8] += addi[samples<8]
+    samples[samples<8] += addi[samples<8]
     return samples
 
 def repeat_n_time(a, result):
@@ -121,7 +116,7 @@ def repeat_k_time(k, result):
             ali.append((pos,i))
             pos = pos + 1
     return out,ali
-    
+
 
 #---------- step 3: add Gaussian noise ----------#
 def add_noise(std, l):
@@ -130,18 +125,68 @@ def add_noise(std, l):
 
 
 
+
+#------ low pass filter for signal simulation
+#-> low pass filter
+#   sampling_rate = 4000.0, cut_off_freq = 1750.0, bandwidth_freq = 40.0
+def low_pass_filter(sampling_rate, cut_off_freq, bandwidth_freq):
+    # Read input parameter
+    fS = sampling_rate  # Sampling rate.
+    fL = cut_off_freq   # Cutoff frequency.
+    fb = bandwidth_freq # Bandwidth frequency
+
+    # Generate frequency bin
+    b = fb / fS
+    N = int(np.ceil((4 / b)))
+    if not N % 2: N += 1  # Make sure that N is odd.
+    n = np.arange(N)
+
+    # Compute sinc filter.
+    h = np.sinc(2 * fL / fS * (n - (N - 1) / 2.))
+
+    # Compute Blackman window.
+    w = 0.42 - 0.5 * np.cos(2 * np.pi * n / (N - 1)) + \
+        0.08 * np.cos(4 * np.pi * n / (N - 1))
+
+    # Compute h and h_start
+    h = h * w
+    h /= np.sum(h)
+    impulse = np.repeat(0., len(h))
+    impulse[0] = 1.
+    h_response = scipy.signal.lfilter(h, 1, impulse)
+    h_start = np.argmax(h_response)
+
+    # return
+    return h,h_start,N
+
+
+
 #----------- main program: sequence to raw signal --------------#
-def raw_to_true_signal(result_pred, sequence, repeat_alpha, noise_std, perfect, p_len):
+# default parameters: 
+#     repeat_alpha=0.1
+#     filter_freq=850
+#     noise_std=1.5
+def raw_to_true_signal(result_pred, sequence, repeat_alpha, filter_freq, noise_std, perfect, p_len):
     result_pred = np.array(result_pred)
     result_pred = result_pred.flatten()
     final_result = result_pred[:len(sequence)]   #-> this is Z-score
-    final_result = np.array(map(int, 5.7*(final_result*12.868652 + 90.208199) + 14 ))
-    #final_result = np.array(map(int, 3.8*(final_result*13.239392 + 98.225867)))
+    final_result = np.array( 5.7*(final_result*12.868652 + 90.208199) + 14 )
+
+    #--- add gauss noise ----#
     if perfect:
         final_result, final_ali = repeat_k_time(p_len, final_result)
+	final_result = np.array(map(int, final_result))
     else:
+        #-> 1. repeat N times 
         final_result, final_ali = repeat_n_time(repeat_alpha, final_result)
-    if noise_std>0:
-        final_result = final_result + add_noise(noise_std, len(final_result))
+        #-> 2. low pass filter
+        if filter_freq>0:
+            h,h_start,N = low_pass_filter(4000.0, filter_freq, 40.0)
+            final_result = np.convolve(final_result,h)[h_start+1:-(N-h_start-1)+1]
+        #-> 3. add gauss noise
+        if noise_std>0:
+            final_result = final_result + add_noise(noise_std, len(final_result))
+	#-> 4. make integer
+	final_result = np.array(map(int, final_result))
     return final_result, final_ali
 
