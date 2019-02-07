@@ -13,7 +13,7 @@ declare FUNC_RET                 #-> for the function echo value
 # ----- usage ------ #
 function usage()
 {
-	echo "DeepSimulator v0.11 [Oct-30-2018] "
+	echo "DeepSimulator v0.15 [Feb-07-2019] "
 	echo "    A Deep Learning based Nanopore simulator which can simulate the process of Nanopore sequencing. "
 	echo ""
 	echo "USAGE:  ./deep_simulator.sh <-i input_genome> [-n simu_read_num] [-o output_root] [-c CPU_num] [-m sample_mode]"
