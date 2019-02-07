@@ -42,19 +42,21 @@ void getRootName(string &in,string &out,char slash)
 
 
 //-------- read ATCG -----------//
-bool ReadATCG(const char* name, vector<char>& genomes)
+bool ReadATCG(const char* name, vector<char>& genomes, string &head)
 {
-    std::ifstream in(name);
+    ifstream in(name);
     if(!in.good()) {
         return false;
     }
 
     //-> skip first header
-    std::string buf;
+    string buf;
     if(!getline(in, buf)){
         return false;
     }
+    head=buf.substr(1,buf.length()-1);
 
+    //-> read following lines
     while(in.good()){
         char item;
         in>>item;
@@ -152,7 +154,7 @@ void Genomes2SignalSequence(const vector<char>& genomes,
 				}
 				else
 				{
-					signals.push_back(5.7*100+14);
+					signals.push_back(5.7*90.2083+14);
 				}
 			}
 		}
@@ -166,33 +168,36 @@ int main(int argc,char **argv)
 {
 	//---- officail_poremodel ----//__2019_02_06__//
 	{
-		if(argc<3)
+		if(argc<2)
 		{
-			fprintf(stderr,"./officail_poremodel <genome_fasta> <zsco_or_not> \n");
-			fprintf(stderr,"[note]: if zsco_or_not=1, output Z-score \n");
+			fprintf(stderr,"./officail_poremodel <genome_fasta> \n");
 			exit(-1);
 		}
 		//input
 		string genome_fasta=argv[1];
-		int zsco_or_not=atoi(argv[2]);
+		int zsco_or_not=0;
 		//load
+		string name;
 		vector<char> genomes;
-		ReadATCG(genome_fasta.c_str(), genomes);
+		ReadATCG(genome_fasta.c_str(), genomes,name);
 		//proc
 		vector<int> index;
 		vector<double> signals;
 		vector<string> kmer_rec;
 		Genomes2SignalSequence(genomes,index,signals,kmer_rec,1,1,zsco_or_not,1);
 		//output
+		string outfile="signal_"+name+".kmer";
+		FILE *fp=fopen(outfile.c_str(),"wb");
 		if(zsco_or_not==1)
 		{
-			for(long i=0;i<signals.size();i++)printf("%lf\n",signals[i]);
+			for(long i=0;i<signals.size();i++)fprintf(fp,"%lf\n",signals[i]);
 		}
 		else
 		{
 			vector<int> signals_ (signals.begin(), signals.end());
-			for(long i=0;i<signals_.size();i++)printf("%d\n",signals_[i]);
+			for(long i=0;i<signals_.size();i++)fprintf(fp,"%d\n",signals_[i]);
 		}
+		fclose(fp);
 		//exit
 		exit(0);
 	}

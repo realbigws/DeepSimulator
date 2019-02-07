@@ -49,7 +49,7 @@ python util/genome_preprocess.py -i example/human_single.fasta -o processed_sequ
 
 ## Context-independent kmer pore model (using official 6mer)
 ```
-kmer_model/kmer_poremodel example/human_single.fasta 0 > kmer_signal
+kmer_model/kmer_poremodel example/human_single.fasta
 ```
 
 ## Run a test to generate simulated Nanopore reads
