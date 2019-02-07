@@ -44,7 +44,7 @@ if __name__ == '__main__':
 		help='prefix the output file')
 	#-> optional arguments
 	parser.add_argument('-c', action='store', dest='circular',
-		default=False, type=bool, help='set if the genome is circular (default is linear)')
+		default=False, type=bool, help='set if the genome is circular (default: genome is linear)')
 	parser.add_argument('-r', action='store', dest='replace',
 		default=False, type=bool, help='set if we replace the \'N\'s (default: delete the \'N\'s)')
 
