@@ -1,6 +1,5 @@
 from data_pre import *
 from con_reg_seq import *
-import math
 import numpy as np
 from multiprocessing import Pool
 import multiprocessing
@@ -67,19 +66,19 @@ def convert_to_input(seq_list):
     return seq_chunk_list
 
 
-
+#------ output functions ------#
 def write_output(result, file_name):
     with open(file_name, 'w') as f:
         for i in result:
             temp = str(i)+'\n'
             f.write(temp)
 
-
 def write_alignment(result, file_name):
     with open(file_name, 'w') as f:
         for i in result:
             temp = str(i[0]+1)+' '+str(i[1]+1)+'\n'
             f.write(temp)
+
 
 #---------- step 2: repeat length sample -----------#
 def rep_rvs(size,a):
@@ -89,7 +88,7 @@ def rep_rvs(size,a):
         -7.6451557771999035+(2*a), 50.873948369526737,
         size=(size-int(size*(0.075-0.015*a)))).astype(int)
     samples = np.concatenate((samples, array_1), 0)
-    addi = np.array(fabs(np.random.normal(2,1,size))).astype(int)
+    addi = np.array(abs(np.random.normal(2,1,size))).astype(int)
     samples[samples<2] = 2
     samples[samples>40] = 40
     samples[samples<8] += addi[samples<8]
