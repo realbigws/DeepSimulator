@@ -88,12 +88,12 @@ def rep_rvs(size,a):
         -7.6451557771999035+(2*a), 50.873948369526737,
         size=(size-int(size*(0.075-0.015*a)))).astype(int)
     samples = np.concatenate((samples, array_1), 0)
-    addi = np.array(abs(np.random.normal(2,1,size))).astype(int)
+    #addi = np.array(abs(np.random.normal(2,1,size))).astype(int)
     samples[samples<2] = 2
     samples[samples>40] = 40
-    samples[samples<8] += addi[samples<8]
+    #samples[samples<8] += addi[samples<8]
     np.random.shuffle(samples)
-    samples[samples<8] += addi[samples<8]
+    #samples[samples<8] += addi[samples<8]
     return samples
 
 def repeat_n_time(a, result):
@@ -125,7 +125,7 @@ def repeat_k_time(k, result):
 
 #---------- step 3: add Gaussian noise ----------#
 def add_noise(std, l):
-    noise = np.random.normal(0, std, l)
+    noise = np.random.normal(0, 5.7*std, l)
     return noise
 
 
