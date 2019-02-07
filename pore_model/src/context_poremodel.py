@@ -136,8 +136,9 @@ def add_noise(std, l):
 def raw_to_true_signal(result_pred, sequence, repeat_alpha, noise_std, perfect, p_len):
 	result_pred = np.array(result_pred)
 	result_pred = result_pred.flatten()
-	final_result = result_pred[:len(sequence)]
-	final_result = np.array(map(int, 3.8*(final_result*13.239392 + 98.225867)))
+	final_result = result_pred[:len(sequence)]   #-> this is Z-score
+	final_result = np.array(map(int, 5.7*(final_result*12.868652 + 90.208199) + 14 ))
+	#final_result = np.array(map(int, 3.8*(final_result*13.239392 + 98.225867)))
 	if perfect:
 		final_result, final_ali = repeat_k_time(p_len, final_result)
 	else:
