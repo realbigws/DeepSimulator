@@ -170,11 +170,14 @@ def add_noise(std, l):
 #     event_std=1.0
 #     filter_freq=850
 #     noise_std=1.5
-def sequence_to_true_signal(sequence, kmer_poremodel='null', perfect=0, p_len=1,
-    repeat_alpha=0.1, event_std=1.0, filter_freq=850, noise_std=1.5 ):
+def sequence_to_true_signal(input_part, kmer_poremodel='null', perfect=0, p_len=1,
+    repeat_alpha=0.1, event_std=1.0, filter_freq=850, noise_std=1.5, sigroot='signal',aliroot='align' ):
+    #--- unzip input args ---#
+    sequence = input_part[0]
+    seq_name = input_part[1]
     #--- get kmer signal ----#
     mean_result, std_result = sequence_official_poremodel(sequence, kmer_poremodel)
-    #--- add gauss noise ----#
+    #--- kmer simulator -----#
     if perfect:
         final_result, final_ali = repeat_k_time(p_len, mean_result)
     else:
@@ -192,7 +195,10 @@ def sequence_to_true_signal(sequence, kmer_poremodel='null', perfect=0, p_len=1,
     #--- make integer -------#
     final_result = np.array(final_result)
     final_result = np.array(map(int, 5.7*final_result+14))
-    return final_result, final_ali
+    #--- write to file ------#
+    write_output(final_result, sigroot+'_{}.txt'.format(seq_name))
+    if not arg.perfect:
+        write_alignment(final_ali, aliroot+'_{}.ali'.format(seq_name))
 
 
 #=================== main =======================#
@@ -242,6 +248,7 @@ if __name__ == '__main__':
     arg = parser.parse_args()
     seq_list = get_seq_list(arg.input)
     id_list = get_id_list(arg.input)
+    in_list = zip(seq_list, id_list)
 
     #---------- load pore model ----------#
     kmer_poremodel=load_official_poremodel(arg.poremodel)
@@ -250,21 +257,11 @@ if __name__ == '__main__':
     func=partial(sequence_to_true_signal, \
     	kmer_poremodel=kmer_poremodel, perfect=arg.perfect, p_len=arg.perflen, \
     	event_std=arg.event_std, filter_freq=arg.filter_freq, noise_std=arg.noise_std, \
-        repeat_alpha=arg.alpha)
+        repeat_alpha=arg.alpha, sigroot=arg.output, aliroot=arg.alignment)
 
     #---------- multi process ------------#
     p = Pool(arg.threads)
-    result_list = []
-    result_list = list(tqdm(
-        p.imap(func, seq_list), 
-        total=len(seq_list)))
+    list(tqdm(p.imap(func, in_list),total=len(in_list)))
     p.close()
     p.join()
-
-    #----------- output part -------------#
-    for i in range(len(result_list)):
-        final_signal, final_ali = result_list[i]
-        write_output(final_signal, arg.output+'_{}.txt'.format(id_list[i]))
-	if not arg.perfect:
-	        write_alignment(final_ali, arg.alignment+'_{}.ali'.format(id_list[i]))
 
