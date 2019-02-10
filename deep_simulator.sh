@@ -114,7 +114,7 @@ do
 		output_root=$OPTARG
 		;;
 	c)
-		CPU_num=$OPTARG
+		THREAD_NUM=$OPTARG
 		;;
 	#-> simulator arguments
 	m)
@@ -250,7 +250,7 @@ then
 	#-> context-dependent simulator
 	source activate tensorflow_cdpm
 	export DeepSimulatorHome=$home
-	python2 $home/pore_model/src/kmer_simulator.py \
+	python2 $home/pore_model/src/context_simulator.py \
 		-i $FILENAME/sampled_read.fasta \
 		-p $FILENAME/signal/$PREFIX \
 		-l $FILENAME/align/$PREALI \
