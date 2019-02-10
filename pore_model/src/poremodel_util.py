@@ -120,7 +120,7 @@ def repeat_k_time(k, result):
 
 #---------- step 3: add Gaussian noise ----------#
 def add_noise(std, l):
-    noise = np.random.normal(0, 5.7*std, l)
+    noise = np.random.normal(0, std, l)
     return noise
 
 
@@ -170,12 +170,10 @@ def raw_to_true_signal(result_pred, sequence, repeat_alpha, filter_freq, noise_s
     result_pred = np.array(result_pred)
     result_pred = result_pred.flatten()
     final_result = result_pred[:len(sequence)]   #-> this is Z-score
-    final_result = np.array( 5.7*(final_result*12.868652 + 90.208199) + 14 )
-
+    final_result = np.array(final_result*12.868652 + 90.208199)
     #--- add gauss noise ----#
     if perfect:
         final_result, final_ali = repeat_k_time(p_len, final_result)
-	final_result = np.array(map(int, final_result))
     else:
         #-> 1. repeat N times 
         final_result, final_ali = repeat_n_time(repeat_alpha, final_result)
@@ -186,7 +184,7 @@ def raw_to_true_signal(result_pred, sequence, repeat_alpha, filter_freq, noise_s
         #-> 3. add gauss noise
         if noise_std>0:
             final_result = final_result + add_noise(noise_std, len(final_result))
-	#-> 4. make integer
-	final_result = np.array(map(int, final_result))
+    #--- make integer -------#
+    final_result = np.array(map(int, 5.7*final_result+14))
     return final_result, final_ali
 

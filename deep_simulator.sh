@@ -13,11 +13,11 @@ declare FUNC_RET                 #-> for the function echo value
 # ----- usage ------ #
 function usage()
 {
-	echo "DeepSimulator v0.15 [Feb-07-2019] "
+	echo "DeepSimulator v0.20 [Feb-12-2019] "
 	echo "    A Deep Learning based Nanopore simulator which can simulate the process of Nanopore sequencing. "
 	echo ""
-	echo "USAGE:  ./deep_simulator.sh <-i input_genome> [-n simu_read_num] [-o output_root] [-c CPU_num] [-m sample_mode]"
-	echo "                            [-C cirular_genome] [-f filter_freq] [-s noise_std] [-P perfect] [-H home] "
+	echo "USAGE:  ./deep_simulator.sh <-i input_genome> [-n simu_read_num] [-o output_root] [-c CPU_num] [-m sample_mode] [-M simulator] "
+	echo "                       [-C cirular_genome] [-e event_std] [-f filter_freq] [-s noise_std] [-P perfect] [-I independ] [-H home] "
 	echo "Options:"
 	echo ""
 	echo "***** required arguments *****"
@@ -33,7 +33,11 @@ function usage()
 	echo "-m sample_mode    : choose from the following distribution for the read length. [default = 2] "
 	echo "                    1: beta_distribution, 2: alpha_distribution, 3: mixed_gamma_dis. "
 	echo ""
+	echo "-M simulator      : choose either context-dependent(0) or context-independent(1) simulator. [default = 1] "
+	echo ""
 	echo "-C cirular_genome : 0 for linear genome and 1 for circular genome. [default = 0] "
+	echo ""
+	echo "-e event_std      : set the standard deviation (std) of the random noise of the event. [default = 1.0] "
 	echo ""
 	echo "-f filter_freq    : set the frequency for the low-pass filter. [default = 850] "
 	echo ""
@@ -44,6 +48,8 @@ function usage()
 	echo ""
 	echo "-P perfect        : 0 for normal mode (with length repeat and random noise). [default = 0]"
 	echo "                    1 for perfect context-dependent pore model (without length repeat and random noise). "
+	echo "-I independ       : 0 for normal mode (with length repeat and random noise). [default = 0]"
+	echo "                    1 for context-independent event without any variance (with length repeat and random noise). "
 	echo ""
 	echo "-H home           : home directory of DeepSimulator. [default = 'current directory'] "
 	echo ""
@@ -77,21 +83,26 @@ output_root=""
 SAMPLE_NUM=100      #-> by default, we simulate 100 reads
 #-> multiprocess
 THREAD_NUM=8        #-> this is the thread (or, CPU) number
-#-> genome sampling
+#-> simulator mode
 SAMPLE_MODE=2       #-> choose from the following distribution: 1: beta_distribution, 2: alpha_distribution, 3: mixed_gamma_dis. default: [2]
+SIMULATOR_MODE=1    #-> choose from the following type of simulator: 0: context-dependent, 1: context-independent. default: [1]
 GENOME_CIRCULAR=0   #-> 0 for NOT circular and 1 for circular. default: [0]
 #-> read geneartion
-FILTER_FREQ=850     #-> set the frequency for the low-pass filter. [default = 850] " 
-NOISE_STD=1.5       #-> set the std of random noise of the signal, default as 1.5
+EVENT_STD=1.0       #-> set the std of random noise of the event, default = 1.0
+FILTER_FREQ=850     #-> set the frequency for the low-pass filter. default = 850
+NOISE_STD=1.5       #-> set the std of random noise of the signal, default = 1.5
 #-> perfect mode
 PERFECT_MODE=0      #-> 0 for normal mode (with length repeat and random noise). [default = 0]
                     #-> 1 for perfect context-dependent pore model (without length repeat and random noise).
+#-> independent
+INDEPEND_MODE=0     #-> 0 for normal mode (with length repeat and random noise). [default = 0]
+                    #-> 1 for context-independent event without any variance (with length repeat and random noise). "
 #------- home directory -----------------#
 home=$curdir
 
 
 #------- parse arguments ---------------#
-while getopts ":i:n:o:c:C:m:f:s:P:H:" opt;
+while getopts ":i:n:o:c:m:M:C:e:f:s:P:I:H:" opt;
 do
 	case $opt in
 	#-> required arguments
@@ -109,11 +120,17 @@ do
 		CPU_num=$OPTARG
 		;;
 	#-> simulator arguments
+	m)
+		SAMPLE_MODE=$OPTARG
+		;;
+	M)
+		SIMULATOR_MODE=$OPTARG
+		;;
 	C)
 		GENOME_CIRCULAR=$OPTARG
 		;;
-	m)
-		SAMPLE_MODE=$OPTARG
+	e)
+		EVENT_STD=$OPTARG
 		;;
 	f)
 		FILTER_FREQ=$OPTARG
@@ -214,23 +231,45 @@ rm -rf $FILENAME/signal/*
 mkdir -p $FILENAME/signal
 rm -rf $FILENAME/align/*
 mkdir -p $FILENAME/align
-source activate tensorflow_cdpm
-export DeepSimulatorHome=$home
-if [ $PERFECT_MODE -eq 0 ]
+
+#--------- determine running mode -----------#
+#-> perfect mode
+perf_mode=""
+if [ $PERFECT_MODE -eq 1 ]
 then
+	perf_mode="--perfect True"
+fi
+#-> independ mode
+indep_mode=""
+if [ $INDEPEND_MODE -eq 1 ]
+then
+	indep_mode="--independ True"
+fi
+
+
+#--------- run different mode of simulator -------------#
+if [ $SIMULATOR_MODE -eq 0 ]
+then
+	#-> context-dependent simulator
+	source activate tensorflow_cdpm
+	export DeepSimulatorHome=$home
 	python2 $home/pore_model/src/main.py \
 		-i $FILENAME/sampled_read.fasta \
 		-p $FILENAME/signal/$PREFIX \
 		-l $FILENAME/align/$PREALI \
 		-t $THREAD_NUM  \
-		-f $FILTER_FREQ -s $NOISE_STD
+		-f $FILTER_FREQ -s $NOISE_STD \
+		$perf_mode
+	source deactivate
 else
-	python2 $home/pore_model/src/main.py \
+	#-> contect-independent simulator
+	python2 $home/kmer_model/kmer_simulator.py \
 		-i $FILENAME/sampled_read.fasta \
 		-p $FILENAME/signal/$PREFIX \
 		-l $FILENAME/align/$PREALI \
-		-t $THREAD_NUM  \
-		--perfect True -s -1
+		-t $THREAD_NUM -m $home/kmer_model/official_kmer.pkl \
+		-e $EVENT_STD -f $FILTER_FREQ -s $NOISE_STD \
+		$perf_mode $indep_mode
 fi
 
 # change the signal file to fasta5 file
@@ -253,6 +292,7 @@ mkdir -p $FASTQ_DIR
 source activate basecall
 read_fast5_basecaller.py -i $FAST5_DIR -s $FASTQ_DIR \
 	-c r94_450bps_linear.cfg -o fastq -t $THREAD_NUM
+source deactivate
 
 # check result
 echo "Basecalling finished!"
