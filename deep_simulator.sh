@@ -48,9 +48,6 @@ function usage()
 	echo ""
 	echo "-P perfect        : 0 for normal mode (with length repeat and random noise). [default = 0]"
 	echo "                    1 for perfect context-dependent pore model (without length repeat and random noise). "
-	echo "-I independ       : 0 for normal mode (with length repeat and random noise). [default = 0]"
-	echo "                    1 for context-independent event without any variance (with length repeat and random noise). "
-	echo ""
 	echo "-H home           : home directory of DeepSimulator. [default = 'current directory'] "
 	echo ""
 	exit 1
@@ -226,7 +223,6 @@ python2 $home/util/genome_sampling.py \
 # signal duplication 
 # done within pore model
 echo "Finished the preprocessing step!"
-echo "Running the context-dependent pore model..."
 rm -rf $FILENAME/signal/*
 mkdir -p $FILENAME/signal
 rm -rf $FILENAME/align/*
@@ -250,6 +246,7 @@ fi
 #--------- run different mode of simulator -------------#
 if [ $SIMULATOR_MODE -eq 0 ]
 then
+	echo "Running the context-dependent pore model..."
 	#-> context-dependent simulator
 	source activate tensorflow_cdpm
 	export DeepSimulatorHome=$home
@@ -262,6 +259,7 @@ then
 		$perf_mode
 	source deactivate
 else
+	echo "Running the context-independent pore model..."
 	#-> contect-independent simulator
 	python2 $home/pore_model/src/kmer_simulator.py \
 		-i $FILENAME/sampled_read.fasta \

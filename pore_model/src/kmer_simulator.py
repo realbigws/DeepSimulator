@@ -171,7 +171,7 @@ def add_noise(std, l):
 #     filter_freq=850
 #     noise_std=1.5
 def sequence_to_true_signal(sequence, kmer_poremodel='null', perfect=0, p_len=1,
-    repeat_alpha=0.1, independ=1, event_std=1.0, filter_freq=850, noise_std=1.5 ):
+    repeat_alpha=0.1, event_std=1.0, filter_freq=850, noise_std=1.5 ):
     #--- get kmer signal ----#
     mean_result, std_result = sequence_official_poremodel(sequence, kmer_poremodel)
     #--- add gauss noise ----#
@@ -181,17 +181,12 @@ def sequence_to_true_signal(sequence, kmer_poremodel='null', perfect=0, p_len=1,
         #-> 1. repeat N times 
         indep_result, final_ali, event_idx = repeat_n_time(repeat_alpha, mean_result)
         event_std = np.random.uniform(-1*event_std*std_result[event_idx], event_std*std_result[event_idx])
-        depend_result = mean_result[event_idx] + event_std
-        #-> 2. independent kmer 
-        if independ:
-            final_result = indep_result
-        else:
-            final_result = depend_result
-        #-> 3. low pass filter
+        final_result = mean_result[event_idx] + event_std
+        #-> 2. low pass filter
         if filter_freq>0:
             h,h_start,N = low_pass_filter(4000.0, filter_freq, 40.0)
             final_result = np.convolve(final_result,h)[h_start+1:-(N-h_start-1)+1]
-        #-> 4. add gauss noise
+        #-> 3. add gauss noise
         if noise_std>0:
             final_result = final_result + add_noise(noise_std, len(final_result))
     #--- make integer -------#
@@ -238,9 +233,6 @@ if __name__ == '__main__':
     parser.add_argument('--perfect', action='store', dest='perfect',
         type=bool, help='Do you want a perfect signal and sequence',
         default=False)
-    parser.add_argument('--independ', action='store', dest='independ',
-        type=bool, help='Signal varies during each event or not',
-        default=False)
     parser.add_argument('--perflen', action='store', dest='perflen',
         type=int, help='repeat length for perfect mode',
         default=1)
@@ -256,9 +248,9 @@ if __name__ == '__main__':
 
     #---------- partial function ---------#
     func=partial(sequence_to_true_signal, \
-    	kmer_poremodel=kmer_poremodel, perfect=arg.perfect, independ=arg.independ, \
+    	kmer_poremodel=kmer_poremodel, perfect=arg.perfect, p_len=arg.perflen, \
     	event_std=arg.event_std, filter_freq=arg.filter_freq, noise_std=arg.noise_std, \
-        p_len=arg.perflen, repeat_alpha=arg.alpha)
+        repeat_alpha=arg.alpha)
 
     #---------- multi process ------------#
     p = Pool(arg.threads)
