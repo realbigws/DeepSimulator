@@ -1,3 +1,5 @@
+from data_pre import *
+from con_reg_seq import *
 from poremodel_util import *
 import numpy as np
 from multiprocessing import Pool
@@ -5,6 +7,73 @@ import multiprocessing
 import os
 import argparse
 import tqdm
+
+
+#----- use GPU for TensorFlow -----#
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+
+
+#--------------- generate chunk seq ---------------#
+def generate_chunk_seq(sequence, chunk_size=100, stride=100):
+    num_full_chunk = int((float(len(sequence)-4)/stride))
+    sequence_list = list()
+    # deal with extremely short sequence
+    if len(sequence)==0:
+        sys.exit('The sequence length is ZERO!!')
+    if num_full_chunk==0:
+        single_chunk = np.tile(sequence, (chunk_size+4, 1))
+        sequence_list.append(single_chunk[:chunk_size+4])
+        return np.array(sequence_list)
+
+    for i in range(num_full_chunk):
+        sequence_list.append(sequence[i*stride:i*stride+chunk_size+4])
+    # deal with the small chunk, using mirrioning to get a full chunk
+    if(len(sequence)!=(num_full_chunk*stride+4)):
+        remainder = len(sequence)-(num_full_chunk*stride+4)
+        add_chunk= sequence[-(remainder+2):]
+        comp_chunk = np.flip(sequence[-(chunk_size-remainder+2):],0)
+        add_chunk = np.vstack((add_chunk,comp_chunk))
+        sequence_list.append(add_chunk)
+    return np.array(sequence_list)
+
+def convert_to_input(seq_list):
+    p = Pool()
+    encoding_list = map(sequence_encoding, seq_list)
+    seq_chunk_list = p.map(generate_chunk_seq, encoding_list)
+    p.close()
+    p.join()
+    return seq_chunk_list
+
+
+#----------- main program: sequence to raw signal --------------#
+# default parameters:
+#     repeat_alpha=0.1
+#     filter_freq=850
+#     noise_std=1.5
+def raw_to_true_signal(result_pred, sequence, repeat_alpha, filter_freq, noise_std, perfect, p_len):
+    result_pred = np.array(result_pred)
+    result_pred = result_pred.flatten()
+    final_result = result_pred[:len(sequence)]   #-> this is Z-score
+    final_result = np.array(final_result*12.868652 + 90.208199)
+    #--- add gauss noise ----#
+    if perfect:
+        final_result, final_ali = repeat_k_time(p_len, final_result)
+    else:
+        #-> 1. repeat N times
+        final_result, final_ali, _ = repeat_n_time(repeat_alpha, final_result)
+        #-> 2. low pass filter
+        if filter_freq>0:
+            h,h_start,N = low_pass_filter(4000.0, filter_freq, 40.0)
+            final_result = np.convolve(final_result,h)[h_start+1:-(N-h_start-1)+1]
+        #-> 3. add gauss noise
+        if noise_std>0:
+            final_result = final_result + add_noise(noise_std, len(final_result))
+    #--- make integer -------#
+    final_result = np.array(final_result)
+    final_result = np.array(map(int, 5.7*final_result+14))
+    return final_result, final_ali
+
+
 
 
 #=================== main =======================#
