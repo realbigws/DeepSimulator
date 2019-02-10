@@ -41,7 +41,7 @@ if __name__ == '__main__':
 		default=False)
 	parser.add_argument('--perflen', action='store', dest='perflen',
 		type=int, help='repeat length for perfect mode',
-		default=6)
+		default=1)
 
 	#---------- input list ---------------#
 	arg = parser.parse_args()
@@ -63,5 +63,6 @@ if __name__ == '__main__':
 		final_signal, final_ali = raw_to_true_signal(result_list[i], 
 			seq_list[i], arg.alpha, arg.freq, arg.std, arg.perfect, arg.perflen)
 		write_output(final_signal, arg.output+'_{}.txt'.format(id_list[i]))
-		write_alignment(final_ali, arg.alignment+'_{}.ali'.format(id_list[i]))
+		if not arg.perfect:
+			write_alignment(final_ali, arg.alignment+'_{}.ali'.format(id_list[i]))
 

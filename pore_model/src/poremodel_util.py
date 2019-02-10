@@ -185,6 +185,7 @@ def raw_to_true_signal(result_pred, sequence, repeat_alpha, filter_freq, noise_s
         if noise_std>0:
             final_result = final_result + add_noise(noise_std, len(final_result))
     #--- make integer -------#
+    final_result = np.array(final_result)
     final_result = np.array(map(int, 5.7*final_result+14))
     return final_result, final_ali
 

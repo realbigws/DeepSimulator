@@ -253,7 +253,7 @@ then
 	#-> context-dependent simulator
 	source activate tensorflow_cdpm
 	export DeepSimulatorHome=$home
-	python2 $home/pore_model/src/main.py \
+	python2 $home/pore_model/src/kmer_simulator.py \
 		-i $FILENAME/sampled_read.fasta \
 		-p $FILENAME/signal/$PREFIX \
 		-l $FILENAME/align/$PREALI \
@@ -263,11 +263,11 @@ then
 	source deactivate
 else
 	#-> contect-independent simulator
-	python2 $home/kmer_model/kmer_simulator.py \
+	python2 $home/pore_model/src/kmer_simulator.py \
 		-i $FILENAME/sampled_read.fasta \
 		-p $FILENAME/signal/$PREFIX \
 		-l $FILENAME/align/$PREALI \
-		-t $THREAD_NUM -m $home/kmer_model/official_kmer.pkl \
+		-t $THREAD_NUM -m $home/pore_model/model/official_kmer.pkl \
 		-e $EVENT_STD -f $FILTER_FREQ -s $NOISE_STD \
 		$perf_mode $indep_mode
 fi

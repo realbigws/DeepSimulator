@@ -44,12 +44,12 @@ python util/genome_preprocess.py -i example/Ecoli_K12_DH10B.fasta -o processed_s
 
 ## Context-dependent pore model
 ```
-./context_poremodel.sh example/human_single.fasta
+./pore_model.sh example/human_single.fasta 0
 ```
 
 ## Context-independent kmer pore model (using official 6mer)
 ```
-kmer_model/kmer_poremodel example/human_single.fasta
+./pore_model.sh example/human_single.fasta 1
 ```
 
 ## Run a test to generate simulated Nanopore reads

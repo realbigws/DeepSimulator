@@ -216,6 +216,12 @@ if __name__ == '__main__':
         help='official kmer pore model')
     parser.add_argument('-t', action='store', dest='threads',
         type=int, help='the number of threads used. (default is 1)', default=1)
+    parser.add_argument('-a', action='store', dest='alpha',
+        type=float, help='change the distribution of the signal repeat time, \
+        value between 0 and 1, 0.1 (default) would give the distribution best \
+        simulate the real case, 0 would give distribution whose basecalling \
+        result is slightly worse than the real case, 1 would give the almost \
+        perfect basecalling result using Albacore', default=0.1)
     parser.add_argument('-e', action='store', dest='event_std',
         type=float, help='set the std of the event. \
         The higher the value, the more variable the event. (default is 1.0)',
@@ -235,6 +241,9 @@ if __name__ == '__main__':
     parser.add_argument('--independ', action='store', dest='independ',
         type=bool, help='Signal varies during each event or not',
         default=False)
+    parser.add_argument('--perflen', action='store', dest='perflen',
+        type=int, help='repeat length for perfect mode',
+        default=1)
 
 
     #---------- input list ---------------#
@@ -248,7 +257,8 @@ if __name__ == '__main__':
     #---------- partial function ---------#
     func=partial(sequence_to_true_signal, \
     	kmer_poremodel=kmer_poremodel, perfect=arg.perfect, independ=arg.independ, \
-    	event_std=arg.event_std, filter_freq=arg.filter_freq, noise_std=arg.noise_std)
+    	event_std=arg.event_std, filter_freq=arg.filter_freq, noise_std=arg.noise_std, \
+        p_len=arg.perflen, repeat_alpha=arg.alpha)
 
     #---------- multi process ------------#
     p = Pool(arg.threads)
@@ -263,6 +273,6 @@ if __name__ == '__main__':
     for i in range(len(result_list)):
         final_signal, final_ali = result_list[i]
         write_output(final_signal, arg.output+'_{}.txt'.format(id_list[i]))
-        write_alignment(final_ali, arg.alignment+'_{}.ali'.format(id_list[i]))
-
+	if not arg.perfect:
+	        write_alignment(final_ali, arg.alignment+'_{}.ali'.format(id_list[i]))
 
