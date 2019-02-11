@@ -269,10 +269,12 @@ echo "Finished generate the simulated signals!"
 echo "Converting the signal into FAST5 files..."
 rm -rf $FILENAME/fast5/*
 mkdir -p $FILENAME/fast5
+source activate tensorflow_cdpm
 python2 $home/util/fast5_modify_signal.py \
 	-i $home/util/template.fast5 \
 	-s $FILENAME/signal \
 	-d $FILENAME/fast5 
+source deactivate
 
 # basecalling using albacore
 echo "Finished format converting!"
