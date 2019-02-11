@@ -213,12 +213,12 @@ then
 else
 	mv $FILENAME/processed_genome $FILENAME/sampled_read.fasta
 fi
+echo "Finished the preprocessing step!"
 
 # pore model translation
 # convert the signal to the original range
 # signal duplication 
 # done within pore model
-echo "Finished the preprocessing step!"
 rm -rf $FILENAME/signal/*
 mkdir -p $FILENAME/signal
 rm -rf $FILENAME/align/*
@@ -262,9 +262,9 @@ else
 		$perf_mode
 	source deactivate
 fi
+echo "Finished generate the simulated signals!"
 
 # change the signal file to fasta5 file
-echo "Finished generate the simulated signals!"
 echo "Converting the signal into FAST5 files..."
 rm -rf $FILENAME/fast5/*
 mkdir -p $FILENAME/fast5
@@ -274,9 +274,9 @@ python2 $home/util/fast5_modify_signal.py \
 	-s $FILENAME/signal \
 	-d $FILENAME/fast5 
 source deactivate
+echo "Finished format converting!"
 
 # basecalling using albacore
-echo "Finished format converting!"
 echo "Running Albacore..."
 FAST5_DIR="$FILENAME/fast5"
 FASTQ_DIR="$FILENAME/fastq"
@@ -286,9 +286,9 @@ source activate basecall
 read_fast5_basecaller.py -i $FAST5_DIR -s $FASTQ_DIR \
 	-c r94_450bps_linear.cfg -o fastq -t $THREAD_NUM
 source deactivate
+echo "Basecalling finished!"
 
 # check result
-echo "Basecalling finished!"
 echo "Checking the read accuracy..."
 cat $FILENAME/fastq/workspace/pass/*.fastq > $FILENAME/test.fastq
 $home/util/minimap2 -Hk19 -t $THREAD_NUM -c $FULLFILE \
