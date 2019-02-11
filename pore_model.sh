@@ -30,9 +30,11 @@ then
 	source deactivate
 else
 	#-> official kmer pore model
+	source activate tensorflow_cdpm
 	python2 $home/pore_model/src/kmer_simulator.py \
 		-i $FULLFILE -p $PREFIX -l $PREFIX -t $THREAD_NUM \
 		-m $home/pore_model/model/$MODEL_FILE \
 		--perfect True
+	source deactivate
 fi
 
