@@ -191,13 +191,11 @@ PREALI="align"
 # we should make a tmp directory named after the input file to
 # store the tmp files
 echo "Pre-process input genome..."
-source activate tensorflow_cdpm
 python2 $home/util/genome_preprocess.py \
 	-i $FULLFILE \
 	-o $FILENAME/processed_genome \
 	-r 1
 echo "Pre-process input genome done!"
-source deactivate
 
 # preprocessing, sampling the read
 # satisfy the converage and length distritubtion requirement
