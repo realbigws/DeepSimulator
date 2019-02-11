@@ -91,9 +91,6 @@ NOISE_STD=1.5       #-> set the std of random noise of the signal, default = 1.5
 #-> perfect mode
 PERFECT_MODE=0      #-> 0 for normal mode (with length repeat and random noise). [default = 0]
                     #-> 1 for perfect context-dependent pore model (without length repeat and random noise).
-#-> independent
-INDEPEND_MODE=0     #-> 0 for normal mode (with length repeat and random noise). [default = 0]
-                    #-> 1 for context-independent event without any variance (with length repeat and random noise). "
 #------- home directory -----------------#
 home=$curdir
 
@@ -235,13 +232,8 @@ if [ $PERFECT_MODE -eq 1 ]
 then
 	perf_mode="--perfect True"
 fi
-#-> independ mode
-indep_mode=""
-if [ $INDEPEND_MODE -eq 1 ]
-then
-	indep_mode="--independ True"
-fi
-
+#-> official kmer model
+model_file=template_median68pA.model
 
 #--------- run different mode of simulator -------------#
 if [ $SIMULATOR_MODE -eq 0 ]
@@ -261,13 +253,15 @@ then
 else
 	echo "Running the context-independent pore model..."
 	#-> contect-independent simulator
+	source activate tensorflow_cdpm
 	python2 $home/pore_model/src/kmer_simulator.py \
 		-i $FILENAME/sampled_read.fasta \
 		-p $FILENAME/signal/$PREFIX \
 		-l $FILENAME/align/$PREALI \
-		-t $THREAD_NUM -m $home/pore_model/model/official_kmer.pkl \
+		-t $THREAD_NUM -m $home/pore_model/model/$model_file \
 		-e $EVENT_STD -f $FILTER_FREQ -s $NOISE_STD \
-		$perf_mode $indep_mode
+		$perf_mode
+	source deactivate
 fi
 
 # change the signal file to fasta5 file
