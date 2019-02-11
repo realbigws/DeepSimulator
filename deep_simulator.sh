@@ -1,15 +1,5 @@
 #!/bin/bash
 
-# ============== global variables defined here ========= # start
-declare FUNC_RET                 #-> for the function echo value
-# ============== global variables defined here ========= # end
-
-
-#---------------------------------------------------------#
-##### ===== All functions are defined here ====== #########
-#---------------------------------------------------------#
-
-
 # ----- usage ------ #
 function usage()
 {
@@ -104,16 +94,16 @@ do
 		FULLFILE=$OPTARG
 		;;
 	#-> optional arguments
-	n)
-		SAMPLE_NUM=$OPTARG
-		;;
 	o)
 		output_root=$OPTARG
+		;;
+	n)
+		SAMPLE_NUM=$OPTARG
 		;;
 	c)
 		THREAD_NUM=$OPTARG
 		;;
-	#-> simulator arguments
+	#-> simulator mode
 	m)
 		SAMPLE_MODE=$OPTARG
 		;;
@@ -123,6 +113,7 @@ do
 	C)
 		GENOME_CIRCULAR=$OPTARG
 		;;
+	#-> simulator parameters
 	e)
 		EVENT_STD=$OPTARG
 		;;
@@ -199,6 +190,7 @@ PREALI="align"
 # we should make a tmp directory named after the input file to
 # store the tmp files
 echo "Pre-process input genome..."
+source activate tensorflow_cdpm
 python2 $home/util/genome_preprocess.py \
 	-i $FULLFILE \
 	-o $FILENAME/processed_genome \
@@ -224,6 +216,7 @@ rm -rf $FILENAME/signal/*
 mkdir -p $FILENAME/signal
 rm -rf $FILENAME/align/*
 mkdir -p $FILENAME/align
+source deactivate
 
 #--------- determine running mode -----------#
 #-> perfect mode
