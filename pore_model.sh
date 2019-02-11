@@ -13,7 +13,8 @@ fi
 FULLFILE=$1
 CONTEXT=$2
 PREFIX=signal
-THREAD_NUM=8
+THREAD_NUM=1
+MODEL_FILE=template_median68pA.model
 home=`pwd`
 
 
@@ -31,7 +32,7 @@ else
 	#-> official kmer pore model
 	python2 $home/pore_model/src/kmer_simulator.py \
 		-i $FULLFILE -p $PREFIX -l $PREFIX -t $THREAD_NUM \
-		-m $home/pore_model/model/official_kmer.pkl \
+		-m $home/pore_model/model/$MODEL_FILE \
 		--perfect True
 fi
 

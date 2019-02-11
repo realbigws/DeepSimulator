@@ -3,21 +3,21 @@ import numpy as np
 from functools import partial
 from multiprocessing import Pool
 import multiprocessing
-import pickle
 import argparse
 from tqdm import *
 
 
 #--------------- step 0: official kmer pore model ---------#
-#-> load '.pkl' for official pore model
+#-> load plain text file for official pore model
 #   data structure is a dict with 4096 dims (6mer 4^6)
 #   data.keys()   :   kmer
 #   data.values() :   (mean, vari)
-def load_official_poremodel(input_pkl):
-    f=open(input_pkl, 'rb')
-    data=pickle.load(f)
-    f.close()
-    return data
+#-> the file 'template_median68pA.model' could be downloaded from
+#   https://github.com/nanoporetech/kmer_models/blob/master/r9.4_180mv_450bps_6mer/template_median68pA.model
+def load_official_poremodel(input_file):
+    model_data = np.genfromtxt(input_file, delimiter="\t", dtype=None, comments='#', names=True, encoding='ascii')
+    model_dict = dict([(x[0].decode('utf-8'), (x[1], x[2])) for x in model_data])
+    return model_dict
 
 def sequence_official_poremodel(sequence, kmer_poremodel):
     k=len(kmer_poremodel.keys()[0])
