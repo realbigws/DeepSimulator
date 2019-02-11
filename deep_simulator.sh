@@ -294,7 +294,8 @@ echo "Basecalling finished!"
 echo "Checking the read accuracy..."
 cat $FILENAME/fastq/workspace/pass/*.fastq > $FILENAME/test.fastq
 $home/util/minimap2 -Hk19 -t $THREAD_NUM -c $FULLFILE \
-	$FILENAME/test.fastq > $FILENAME/mapping.paf
+	$FILENAME/test.fastq 1> $FILENAME/mapping.paf 2> $FILENAME/err
+rm -f $FILENAME/err
 accuracy=`awk 'BEGIN{a=0;b=0}{a+=$10/$11;b++}END{print a/b}' $FILENAME/mapping.paf`
 passnum=`grep "^@" $FILENAME/test.fastq | wc | awk '{print $1}'`
 echo "Here is the mapping identity: $accuracy of $passnum reads passed base-calling."
