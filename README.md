@@ -22,7 +22,11 @@ Reference:
 
 # Install
 ## Prerequisites
-Anaconda2 or Minoconda2 (https://conda.io/miniconda.html)
+Anaconda2 (https://www.anaconda.com/distribution/). For example, users may download the following package:
+```
+wget https://repo.anaconda.com/archive/Anaconda2-2018.12-Linux-x86_64.sh
+bash Anaconda2-2018.12-Linux-x86_64.sh
+```
 
 ## Download the DeepSimulator package
 ```
