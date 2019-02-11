@@ -35,26 +35,26 @@ cd ./DeepSimulator/
 ./install
 ```
 
-# Test
-
-## Pre-process nucleotide sequence
-```
-python util/genome_preprocess.py -i example/Ecoli_K12_DH10B.fasta -o processed_sequence -r 1
-```
+# Examples
 
 ## Context-dependent pore model
 ```
-./pore_model.sh example/human_single.fasta 0
+./pore_model.sh example/001c577a-a502-43ef-926a-b883f94d157b.true_fasta 0
 ```
 
 ## Context-independent kmer pore model (using official 6mer)
 ```
-./pore_model.sh example/human_single.fasta 1
+./pore_model.sh example/001c577a-a502-43ef-926a-b883f94d157b.true_fasta 1
 ```
 
-## Run a test to generate simulated Nanopore reads
+## Simulate the signal and read for a given sequence
 ```
-./deep_simulator.sh -i example/artificial_chr22.fasta
+./deep_simulator.sh -i example/001c577a-a502-43ef-926a-b883f94d157b.true_fasta -n -1
+```
+
+## Run a test to generate simulated signals and reads for a given genome
+```
+./deep_simulator.sh -i example/artificial_human_chr22.fasta
 ```
 
 # Simulated VS original signal

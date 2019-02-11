@@ -15,6 +15,7 @@ function usage()
 	echo ""
 	echo "***** optional arguments *****"
 	echo "-n simu_read_num  : the number of reads need to be simulated. [default = 100] "
+	echo "                    Set -1 to simulate the whole input sequence without cut (not suitable for genome-level). "
 	echo ""
 	echo "-o output_root    : Default output would the current directory. [default = './\${input_name}_DeepSimu'] "
 	echo ""
@@ -196,17 +197,24 @@ python2 $home/util/genome_preprocess.py \
 	-o $FILENAME/processed_genome \
 	-r 1
 echo "Pre-process input genome done!"
+source deactivate
 
 # preprocessing, sampling the read
 # satisfy the converage and length distritubtion requirement
 echo "Executing the preprocessing step..."
-python2 $home/util/genome_sampling.py \
-	-i $FILENAME/processed_genome \
-	-p $FILENAME/sampled_read \
-	-n $SAMPLE_NUM \
-	-d $SAMPLE_MODE \
-	-c $GENOME_CIRCULAR
-source deactivate
+if [ $SAMPLE_NUM -gt 0 ]
+then
+	source activate tensorflow_cdpm
+	python2 $home/util/genome_sampling.py \
+		-i $FILENAME/processed_genome \
+		-p $FILENAME/sampled_read \
+		-n $SAMPLE_NUM \
+		-d $SAMPLE_MODE \
+		-c $GENOME_CIRCULAR
+	source deactivate
+else
+	mv $FILENAME/processed_genome $FILENAME/sampled_read.fasta
+fi
 
 # pore model translation
 # convert the signal to the original range
