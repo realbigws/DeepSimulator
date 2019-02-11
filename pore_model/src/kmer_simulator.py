@@ -15,7 +15,7 @@ from tqdm import *
 #-> the file 'template_median68pA.model' could be downloaded from
 #   https://github.com/nanoporetech/kmer_models/blob/master/r9.4_180mv_450bps_6mer/template_median68pA.model
 def load_official_poremodel(input_file):
-    model_data = np.genfromtxt(input_file, delimiter="\t", dtype=None, comments='#', names=True, encoding='ascii')
+    model_data = np.genfromtxt(input_file, delimiter="\t", dtype=None, comments='#', names=True)
     model_dict = dict([(x[0].decode('utf-8'), (x[1], x[2])) for x in model_data])
     return model_dict
 
