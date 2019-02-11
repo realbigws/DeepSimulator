@@ -206,6 +206,7 @@ python2 $home/util/genome_sampling.py \
 	-n $SAMPLE_NUM \
 	-d $SAMPLE_MODE \
 	-c $GENOME_CIRCULAR
+source deactivate
 
 # pore model translation
 # convert the signal to the original range
@@ -216,7 +217,6 @@ rm -rf $FILENAME/signal/*
 mkdir -p $FILENAME/signal
 rm -rf $FILENAME/align/*
 mkdir -p $FILENAME/align
-source deactivate
 
 #--------- determine running mode -----------#
 #-> perfect mode
