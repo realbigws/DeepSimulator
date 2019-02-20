@@ -17,7 +17,7 @@ function usage()
 	echo "-n simu_read_num  : the number of reads need to be simulated. [default = 100] "
 	echo "                    Set -1 to simulate the whole input sequence without cut (not suitable for genome-level). "
 	echo ""
-	echo "-o out_root    : Default output would the current directory. [default = './\${input_name}_DeepSimu'] "
+	echo "-o out_root       : Default output would the current directory. [default = './\${input_name}_DeepSimu'] "
 	echo ""
 	echo "-c CPU_num        : Number of processors. [default = 8]"
 	echo ""
@@ -39,6 +39,7 @@ function usage()
 	echo ""
 	echo "-P perfect        : 0 for normal mode (with length repeat and random noise). [default = 0]"
 	echo "                    1 for perfect context-dependent pore model (without length repeat and random noise). "
+	echo "                    2 for generating almost perfect reads without any randomness in signals (equal to -e 0 -f 0 -s 0). "
 	echo "-H home           : home directory of DeepSimulator. [default = 'current directory'] "
 	echo ""
 	exit 1
@@ -82,6 +83,7 @@ NOISE_STD=1.5       #-> set the std of random noise of the signal, default = 1.5
 #-> perfect mode
 PERFECT_MODE=0      #-> 0 for normal mode (with length repeat and random noise). [default = 0]
                     #-> 1 for perfect context-dependent pore model (without length repeat and random noise).
+                    #-> 2 for generating almost perfect reads without any randomness in signals (equal to -e 0 -f 0 -s 0).
 #------- home directory -----------------#
 home=$curdir
 
@@ -232,6 +234,11 @@ perf_mode=""
 if [ $PERFECT_MODE -eq 1 ]
 then
 	perf_mode="--perfect True"
+elif [ $PERFECT_MODE -eq 2 ]
+then
+	EVENT_STD=0
+	FILTER_FREQ=0
+	NOISE_STD=0
 fi
 #-> official kmer model
 model_file=template_median68pA.model
