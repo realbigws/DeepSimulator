@@ -211,10 +211,9 @@ echo "Pre-process input genome done!"
 # preprocessing, sampling the read
 # satisfy the converage and length distritubtion requirement
 echo "Executing the preprocessing step..."
-if [ $GENOME_CIRCULAR -eq 0 ]
+circular=""
+if [ $GENOME_CIRCULAR -eq 1 ]
 then
-	circular=""
-else
 	circular="-c True"
 fi
 if [ $SAMPLE_NUM -gt 0 ]
@@ -225,7 +224,6 @@ then
 		-p $FILENAME/sampled_read \
 		-n $SAMPLE_NUM \
 		-d $SAMPLE_MODE \
-		-u $TUNE_SAMPLING \
 		$circular
 	source deactivate
 else
@@ -270,6 +268,7 @@ then
 		-l $FILENAME/align/$PREALI \
 		-t $THREAD_NUM  \
 		-f $FILTER_FREQ -s $NOISE_STD \
+		-u $TUNE_SAMPLING \
 		$perf_mode
 	source deactivate
 else
@@ -282,6 +281,7 @@ else
 		-l $FILENAME/align/$PREALI \
 		-t $THREAD_NUM -m $home/pore_model/model/$model_file \
 		-e $EVENT_STD -f $FILTER_FREQ -s $NOISE_STD \
+		-u $TUNE_SAMPLING \
 		$perf_mode
 	source deactivate
 fi

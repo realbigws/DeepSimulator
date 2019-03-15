@@ -140,8 +140,8 @@ if __name__ == '__main__':
 
     #---------- partial function ---------#
     func=partial(sequence_to_true_signal, \
-    	kmer_poremodel=kmer_poremodel, perfect=arg.perfect, p_len=arg.perflen, \
-    	event_std=arg.event_std, filter_freq=arg.filter_freq, noise_std=arg.noise_std, \
+        kmer_poremodel=kmer_poremodel, perfect=arg.perfect, p_len=arg.perflen, \
+        event_std=arg.event_std, filter_freq=arg.filter_freq, noise_std=arg.noise_std, \
         repeat_alpha=arg.alpha, repeat_more=arg.more, sigroot=arg.output, aliroot=arg.alignment)
 
     #---------- multi process ------------#
