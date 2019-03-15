@@ -106,7 +106,7 @@ if __name__ == '__main__':
         simulate the real case, 0 would give distribution whose basecalling \
         result is slightly worse than the real case, 1 would give the almost \
         perfect basecalling result using Albacore', default=0.1)
-    parser.add_argument('-m', action='store', dest='more',
+    parser.add_argument('-u', action='store', dest='more',
         type=int, help='tune sampling rate to around 8. (default is 1)', default=1)
     parser.add_argument('-e', action='store', dest='event_std',
         type=float, help='set the std of the event. \

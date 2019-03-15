@@ -3,11 +3,11 @@
 # ----- usage ------ #
 function usage()
 {
-	echo "DeepSimulator v0.20 [Feb-12-2019] "
+	echo "DeepSimulator v0.21 [Mar-14-2019] "
 	echo "    A Deep Learning based Nanopore simulator which can simulate the process of Nanopore sequencing. "
 	echo ""
 	echo "USAGE:  ./deep_simulator.sh <-i input_genome> [-n simu_read_num] [-o out_root] [-c CPU_num] [-m sample_mode] [-M simulator] "
-	echo "                       [-C cirular_genome] [-e event_std] [-f filter_freq] [-s noise_std] [-P perfect] [-I independ] [-H home] "
+	echo "                [-C cirular_genome] [-u tune_sampling] [-e event_std] [-f filter_freq] [-s noise_std] [-P perfect] [-H home] "
 	echo "Options:"
 	echo ""
 	echo "***** required arguments *****"
@@ -28,6 +28,8 @@ function usage()
 	echo ""
 	echo "-C cirular_genome : 0 for linear genome and 1 for circular genome. [default = 0] "
 	echo ""
+	echo "-u tune_sampling  : 1 for tuning sampling rate to around eight and 0 for not. [default = 1] "
+	echo ""
 	echo "-e event_std      : set the standard deviation (std) of the random noise of the event. [default = 1.0] "
 	echo ""
 	echo "-f filter_freq    : set the frequency for the low-pass filter. [default = 850] "
@@ -40,6 +42,7 @@ function usage()
 	echo "-P perfect        : 0 for normal mode (with length repeat and random noise). [default = 0]"
 	echo "                    1 for perfect context-dependent pore model (without length repeat and random noise). "
 	echo "                    2 for generating almost perfect reads without any randomness in signals (equal to -e 0 -f 0 -s 0). "
+	echo ""
 	echo "-H home           : home directory of DeepSimulator. [default = 'current directory'] "
 	echo ""
 	exit 1
@@ -76,6 +79,7 @@ THREAD_NUM=8        #-> this is the thread (or, CPU) number
 SAMPLE_MODE=2       #-> choose from the following distribution: 1: beta_distribution, 2: alpha_distribution, 3: mixed_gamma_dis. default: [2]
 SIMULATOR_MODE=1    #-> choose from the following type of simulator: 0: context-dependent, 1: context-independent. default: [1]
 GENOME_CIRCULAR=0   #-> 0 for NOT circular and 1 for circular. default: [0]
+TUNE_SAMPLING=1     #-> 1 for tuning sampling rate to around 8. default: [1]
 #-> read geneartion
 EVENT_STD=1.0       #-> set the std of random noise of the event, default = 1.0
 FILTER_FREQ=850     #-> set the frequency for the low-pass filter. default = 850
@@ -89,7 +93,7 @@ home=$curdir
 
 
 #------- parse arguments ---------------#
-while getopts ":i:n:o:c:m:M:C:e:f:s:P:I:H:" opt;
+while getopts ":i:n:o:c:m:M:C:u:e:f:s:P:H:" opt;
 do
 	case $opt in
 	#-> required arguments
@@ -115,6 +119,9 @@ do
 		;;
 	C)
 		GENOME_CIRCULAR=$OPTARG
+		;;
+	u)
+		TUNE_SAMPLING=$OPTARG
 		;;
 	#-> simulator parameters
 	e)
@@ -218,6 +225,7 @@ then
 		-p $FILENAME/sampled_read \
 		-n $SAMPLE_NUM \
 		-d $SAMPLE_MODE \
+		-u $TUNE_SAMPLING \
 		$circular
 	source deactivate
 else
