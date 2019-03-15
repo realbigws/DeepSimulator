@@ -204,6 +204,12 @@ echo "Pre-process input genome done!"
 # preprocessing, sampling the read
 # satisfy the converage and length distritubtion requirement
 echo "Executing the preprocessing step..."
+if [ $GENOME_CIRCULAR -eq 0 ]
+then
+	circular=""
+else
+	circular="-c True"
+fi
 if [ $SAMPLE_NUM -gt 0 ]
 then
 	source activate tensorflow_cdpm
@@ -212,7 +218,7 @@ then
 		-p $FILENAME/sampled_read \
 		-n $SAMPLE_NUM \
 		-d $SAMPLE_MODE \
-		-c $GENOME_CIRCULAR
+		$circular
 	source deactivate
 else
 	mv $FILENAME/processed_genome $FILENAME/sampled_read.fasta
