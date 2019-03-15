@@ -44,7 +44,7 @@ def rep_rvs(size,a, more):
         -7.6451557771999035+(2*a), 50.873948369526737,
         size=(size-int(size*(0.075-0.015*a)))).astype(int)
     samples = np.concatenate((samples, array_1), 0)
-    samples[samples<2] = 2
+    samples[samples<1] = 1
     samples[samples>40] = 40
     if more == 1:
         addi = np.array(abs(np.random.normal(2,1,size))).astype(int)
