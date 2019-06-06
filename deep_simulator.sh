@@ -17,9 +17,13 @@ function usage()
 	echo "-n simu_read_num  : the number of reads need to be simulated. [default = 100] "
 	echo "                    Set -1 to simulate the whole input sequence without cut (not suitable for genome-level). "
 	echo ""
+	echo "-K coverage       : this parameter is converted to number of read in the program, if both K and n are given, we use the larger one."
+	echo ""
 	echo "-o out_root       : Default output would the current directory. [default = './\${input_name}_DeepSimu'] "
 	echo ""
 	echo "-c CPU_num        : Number of processors. [default = 8]"
+	echo ""
+	echo "-S Random_seed    : Random seed for controling the read sampling process. [default = 0]"
 	echo ""
 	echo "-m sample_mode    : choose from the following distribution for the read length. [default = 3] "
 	echo "                    1: beta_distribution, 2: alpha_distribution, 3: mixed_gamma_dis. "
@@ -73,6 +77,7 @@ out_root=""
 
 #------- optioanl parameters -----------#
 SAMPLE_NUM=100      #-> by default, we simulate 100 reads
+COVERAGE=0          #-> the coverage parameter, we simulate read whichever the larger, SAMPLE_NUM or the number computed from coverage
 #-> multiprocess
 THREAD_NUM=8        #-> this is the thread (or, CPU) number
 #-> simulator mode
@@ -81,6 +86,7 @@ SIMULATOR_MODE=1    #-> choose from the following type of simulator: 0: context-
 GENOME_CIRCULAR=0   #-> 0 for NOT circular and 1 for circular. default: [0]
 TUNE_SAMPLING=1     #-> 1 for tuning sampling rate to around 8. default: [1]
 #-> read geneartion
+RANDOM_SEED=0       #-> random seed for controling sampling, for reproducibility. default: [0]
 EVENT_STD=1.0       #-> set the std of random noise of the event, default = 1.0
 FILTER_FREQ=850     #-> set the frequency for the low-pass filter. default = 850
 NOISE_STD=1.5       #-> set the std of random noise of the signal, default = 1.5
@@ -93,7 +99,7 @@ home=$curdir
 
 
 #------- parse arguments ---------------#
-while getopts ":i:n:o:c:m:M:C:u:e:f:s:P:H:" opt;
+while getopts ":i:n:K:o:c:S:m:M:C:u:e:f:s:P:H:" opt;
 do
 	case $opt in
 	#-> required arguments
@@ -107,8 +113,14 @@ do
 	n)
 		SAMPLE_NUM=$OPTARG
 		;;
+	K)
+		COVERAGE=$OPTARG
+		;;
 	c)
 		THREAD_NUM=$OPTARG
+		;;
+	S)
+		RANDOM_SEED=$OPTARG
 		;;
 	#-> simulator mode
 	m)
@@ -223,7 +235,9 @@ then
 		-i $FILENAME/processed_genome \
 		-p $FILENAME/sampled_read \
 		-n $SAMPLE_NUM \
+		-K $COVERAGE \
 		-d $SAMPLE_MODE \
+		-S $RANDOM_SEED \
 		$circular
 	source deactivate
 else
@@ -268,6 +282,7 @@ then
 		-l $FILENAME/align/$PREALI \
 		-t $THREAD_NUM  \
 		-f $FILTER_FREQ -s $NOISE_STD \
+		-S $RANDOM_SEED \
 		-u $TUNE_SAMPLING \
 		$perf_mode
 	source deactivate
@@ -281,6 +296,7 @@ else
 		-l $FILENAME/align/$PREALI \
 		-t $THREAD_NUM -m $home/pore_model/model/$model_file \
 		-e $EVENT_STD -f $FILTER_FREQ -s $NOISE_STD \
+		-S $RANDOM_SEED \
 		-u $TUNE_SAMPLING \
 		$perf_mode
 	source deactivate
@@ -294,7 +310,7 @@ mkdir -p $FILENAME/fast5
 source activate tensorflow_cdpm
 python2 $home/util/fast5_modify_signal.py \
 	-i $home/util/template.fast5 \
-	-s $FILENAME/signal \
+	-s $FILENAME/signal -t $THREAD_NUM \
 	-d $FILENAME/fast5 
 source deactivate
 echo "Finished format converting!"
