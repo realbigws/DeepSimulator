@@ -1,9 +1,9 @@
 # DeepSimulator
 The first deep learning based Nanopore simulator which can simulate the process of Nanopore sequencing.
 
-Paper: https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/bty223/4962495
+Paper: [DeepSimulator: a deep simulator for Nanopore sequencing](https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/bty223/4962495) [[PDF]](https://drive.google.com/open?id=1TpxZR8lAbcABHBU-Pu8S8gfhvY6vnjn_)
 
-Reference:
+If you find this tool useful, please cite our work using the following reference:
 ```
 @article{deepsimulator,
     author = {Li, Yu and Han, Renmin and Bi, Chongwei and Li, Mo and Wang, Sheng and Gao, Xin},
@@ -44,7 +44,7 @@ cd ./DeepSimulator/
 
 ## Install all required modules
 ```
-./install
+./install.sh
 ```
 
 # Examples
@@ -68,6 +68,13 @@ cd ./DeepSimulator/
 ```
 ./deep_simulator.sh -i example/artificial_human_chr22.fasta
 ```
+
+# Explanation of the content in the output folder
+Within the output folder, there are several folders and files. If you run
+```
+./deep_simulator.sh -i example/artificial_human_chr22.fasta
+```
+then, within the folder 'artificial_human_chr22', there are six files: 'processed_genome', 'sampled_read.fasta', 'test_pass.fastq', 'test_fail.fastq', 'mapping.paf', and 'accuracy'. There are one folders: 'fast5'. Let us explain all of them in chronological order. After receiving the original input genome file, we first perform some essential preprocessing, resulting in the file 'processed_genome'. After that, we run the first module, sampling reads from the processed genome, resulting in 'sampled_read.fasta'. Then, the 'sampled_read.fasta' will go through the pore model, resulting in 'fast5' folder, where we store the simulated signals in FAST5 file. This 'fast5' folder can be the input of the basecaller, e.g., Albacore. We collect the results from the basecaller into the two files 'test_pass.fastq' and 'test_fail.fastq' to record the passed and failed reads. Finally, we check the accuracy using minimap2, whose output is 'mapping.paf'. File 'accuracy' stores the accuracy for later reference.
 
 # Simulated VS original signal
 
