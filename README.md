@@ -74,7 +74,7 @@ Within the output folder, there are several folders and files. If you run
 ```
 ./deep_simulator.sh -i example/artificial_human_chr22.fasta
 ```
-then, within the folder 'artificial_human_chr22_DeepSimu/', there are six files: 'processed_genome', 'sampled_read.fasta', 'pass.fastq', 'fail.fastq', 'mapping.paf', and 'accuracy'. There is one folder: 'fast5/'. Let us explain all of them in chronological order. 
+then, within the folder 'artificial_human_chr22_DeepSimu/', there are six files: 'processed_genome', 'sampled_read.fasta', 'pass.fastq', 'fail.fastq', 'mapping.paf', and 'accuracy'. There is one folder: 'fast5/'. Let us explain all of them in chronological order.
 
 After receiving the original input genome file, we first perform some essential preprocessing, resulting in the file 'processed_genome'. After that, we run the first module, sampling reads from the processed genome, resulting in 'sampled_read.fasta'. Then, the 'sampled_read.fasta' will go through the pore model, resulting in 'fast5/' folder, where we store the simulated signals in FAST5 file. If option '-O 1' is specified, then we create the 'align/' folder to store the repeat times for each position in each read. If option '-G 1' is specified, then we create the 'signal/' folder to store the simulated signal in txt format for each read.
 
