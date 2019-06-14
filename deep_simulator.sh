@@ -7,8 +7,8 @@ function usage()
 	echo "    A Deep Learning based Nanopore simulator which can simulate the process of Nanopore sequencing. "
 	echo ""
 	echo "USAGE:  ./deep_simulator.sh <-i input_genome> [-o out_root] [-c CPU_num] [-S random_seed] "
-	echo "                [-n read_num] [-K coverage] [-C cirular_genome] [-m sample_mode] "
-	echo "                [-M simulator] [-e event_std] [-u tune_sampling] [-O out_align] "
+	echo "                [-n read_num] [-K coverage] [-l read_len_mean] [-C cirular_genome] [-m sample_mode] "
+	echo "                [-M simulator] [-e event_std] [-u tune_sampling] [-O out_align] [-G sig_out]"
 	echo "                [-f filter_freq] [-s signal_std] [-P perfect] [-H home] "
 	echo "Options:"
 	echo ""
@@ -30,6 +30,8 @@ function usage()
 	echo "-K coverage       : this parameter is converted to number of read in the program. [default = 0] "
 	echo "                    if both K and n are given, we use the larger one."
 	echo ""
+	echo "-l read_len_mean  : this parameter is used to control the read length mean. [default=8000] "
+	echo ""
 	echo "-C cirular_genome : 0 for linear genome and 1 for circular genome. [default = 0] "
 	echo ""
 	echo "-m sample_mode    : choose from the following distribution for the read length. [default = 3] "
@@ -45,6 +47,8 @@ function usage()
 	echo "                    and 450 is the bases per second to pass the nanopore. "
 	echo ""
 	echo "-O out_align      : Output ground-truth warping path between simulated signal and event. [default = 0 NOT to output] "
+	echo ""
+	echo "-G out_signal     : Output simulated signal in txt format. [default = 0 NOT to output] "
 	echo ""
 	echo "***** optional arguments (signal-signal) *****"
 	echo "-f filter_freq    : set the frequency for the low-pass filter. [default = 850] "
@@ -93,6 +97,7 @@ RANDOM_SEED=0       #-> random seed for controling sampling, for reproducibility
 #------- read-level parameter ----------#
 SAMPLE_NUM=100      #-> by default, we simulate 100 reads
 COVERAGE=0          #-> the coverage parameter, we simulate read whichever the larger, SAMPLE_NUM or the number computed from coverage
+LEN_MEAN=8000       #-> read length mean
 GENOME_CIRCULAR=0   #-> 0 for NOT circular and 1 for circular. default: [0]
 SAMPLE_MODE=3       #-> choose from the following distribution: 1: beta_distribution, 2: alpha_distribution, 3: mixed_gamma_dis. default: [3]
 #------- event-level parameter ---------#
@@ -100,6 +105,7 @@ SIMULATOR_MODE=1    #-> choose from the following type of simulator: 0: context-
 EVENT_STD=1.0       #-> set the std of random noise of the event, default = 1.0
 TUNE_SAMPLING=1     #-> 1 for tuning sampling rate to around 8. default: [1]
 ALIGN_OUT=0         #-> 1 for the output of ground-truth warping path between simulated signal and event. default: [0]
+SIG_OUT=0           #-> 1 to output the signal in text format
 #------- signal-level parameter --------#
 FILTER_FREQ=850     #-> set the frequency for the low-pass filter. default = 850
 NOISE_STD=1.5       #-> set the std of random noise of the signal, default = 1.5
@@ -112,7 +118,7 @@ home=$curdir
 
 
 #------- parse arguments ---------------#
-while getopts ":i:o:c:S:n:K:C:m:M:e:u:O:f:s:P:H:" opt;
+while getopts ":i:o:c:S:n:K:l:C:m:M:e:u:O:G:f:s:P:H:" opt;
 do
 	case $opt in
 	#-> required arguments
@@ -136,6 +142,9 @@ do
 	K)
 		COVERAGE=$OPTARG
 		;;
+	l)
+		LEN_MEAN=$OPTARG
+		;;
 	C)
 		GENOME_CIRCULAR=$OPTARG
 		;;
@@ -154,6 +163,9 @@ do
 		;;
 	O)
 		ALIGN_OUT=$OPTARG
+		;;
+	G)
+		SIG_OUT=$OPTARG
 		;;
 	#-> signal-level parameters
 	f)
@@ -253,6 +265,7 @@ then
 		-p $FILENAME/sampled_read \
 		-n $SAMPLE_NUM \
 		-K $COVERAGE \
+		-l $LEN_MEAN \
 		-d $SAMPLE_MODE \
 		-S $RANDOM_SEED \
 		$circular
@@ -267,7 +280,10 @@ echo "Finished the preprocessing step!"
 # signal duplication 
 # done within pore model
 rm -rf $FILENAME/signal/*
-mkdir -p $FILENAME/signal
+if [ $SIG_OUT -eq 1 ]
+then
+	mkdir -p $FILENAME/signal
+fi
 rm -rf $FILENAME/align/*
 if [ $ALIGN_OUT -eq 1 ]
 then
@@ -280,6 +296,11 @@ align_out=""
 if [ $ALIGN_OUT -eq 1 ]
 then
 	align_out="--outali True"
+fi
+sig_out=""
+if [ $SIG_OUT -eq 1 ]
+then
+	sig_out="--sigout True"
 fi
 #-> perfect mode
 perf_mode=""
@@ -296,6 +317,8 @@ fi
 model_file=template_median68pA.model
 
 #--------- run different mode of simulator -------------#
+rm -rf $FILENAME/fast5/*
+mkdir -p $FILENAME/fast5
 if [ $SIMULATOR_MODE -eq 0 ]
 then
 	echo "Running the context-dependent pore model..."
@@ -310,7 +333,9 @@ then
 		-f $FILTER_FREQ -s $NOISE_STD \
 		-S $RANDOM_SEED \
 		-u $TUNE_SAMPLING \
-		$perf_mode $align_out
+		-F $FILENAME/fast5 \
+		-T $home/util/template.fast5 \
+		$perf_mode $align_out $sig_out
 	source deactivate
 else
 	echo "Running the context-independent pore model..."
@@ -324,25 +349,12 @@ else
 		-e $EVENT_STD -f $FILTER_FREQ -s $NOISE_STD \
 		-S $RANDOM_SEED \
 		-u $TUNE_SAMPLING \
-		$perf_mode $align_out
+		-F $FILENAME/fast5 \
+		-T $home/util/template.fast5 \
+		$perf_mode $align_out $sig_out
 	source deactivate
 fi
-echo "Finished generate the simulated signals!"
-
-#--------- generate FAST5 --------------#
-# change the signal file to fasta5 file
-echo "Converting the signal into FAST5 files..."
-rm -rf $FILENAME/fast5/*
-mkdir -p $FILENAME/fast5
-source activate tensorflow_cdpm
-python2 $home/util/fast5_modify_signal.py \
-	-i $home/util/template.fast5 \
-	-s $FILENAME/signal -t $THREAD_NUM \
-	-d $FILENAME/fast5 
-source deactivate
-rm -rf $FILENAME/signal/*
-rmdir $FILENAME/signal
-echo "Finished format converting!"
+echo "Finished generate the simulated signals and fast5 files!"
 
 #--------- base-calling ----------------#
 # basecalling using albacore
